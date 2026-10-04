@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Иконка «Тетрадь»: тетрадь с корешком, строками и закладкой на фоне цвета боковой панели -->
+  <rect width="512" height="512" rx="112" fill="#1F2540"/>
+  <g transform="translate(256 262) rotate(-6) translate(-256 -262)">
+    <rect x="146" y="118" width="230" height="288" rx="22" fill="#F7F8F5"/>
+    <path d="M146 140a22 22 0 0 1 22-22h28v288h-28a22 22 0 0 1-22-22z" fill="#8C8FE0"/>
+    <g stroke="#DCE0E8" stroke-width="10" stroke-linecap="round">
+      <line x1="226" y1="190" x2="344" y2="190"/>
+      <line x1="226" y1="234" x2="344" y2="234"/>
+      <line x1="226" y1="278" x2="344" y2="278"/>
+      <line x1="226" y1="322" x2="306" y2="322"/>
+    </g>
+    <path d="M318 118h34v86l-17-14-17 14z" fill="#FFC93C"/>
+  </g>
+</svg>

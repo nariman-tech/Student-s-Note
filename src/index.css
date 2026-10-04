@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-paper text-ink font-body antialiased;
+}
+
+h1,
+h2,
+h3 {
+  @apply font-display;
+}
+
+/* Тонкая линия под "тетрадный" акцент — используется вместо теней у карточек */
+.rule {
+  @apply border-b border-line;
+}
+
+/* Плейсхолдер для contentEditable-редактора (обычный placeholder тут не работает) */
+.empty-placeholder:empty::before {
+  content: attr(data-placeholder);
+  color: rgb(27 35 64 / 0.4);
+  pointer-events: none;
+}
+
+/* Видимый фокус для доступности с клавиатуры */
+:focus-visible {
+  outline: 2px solid #1b2340;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Печать и «Сохранить как PDF» (кнопка «PDF» в тетради): только сам конспект —
+   без боковой панели, кнопок и панелей инструментов (они помечены классом print:hidden) */
+@media print {
+  @page {
+    margin: 16mm 14mm;
+  }
+  html,
+  body,
+  #root {
+    height: auto;
+    background: #fff;
+  }
+  main {
+    overflow: visible !important;
+  }
+  /* Кнопки удаления картинок/файлов внутри текста */
+  [data-action] {
+    display: none !important;
+  }
+  /* Вложенный PDF в браузере не печатается — остаётся его заголовок с именем файла */
+  [data-note-file] iframe {
+    display: none !important;
+  }
+  /* Не разрывать картинку между страницами */
+  [data-note-image],
+  [data-note-file],
+  img {
+    break-inside: avoid;
+  }
+  /* Выделение цветом и цвет текста сохраняем как на экране */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

@@ -1,0 +1,20 @@
+# Cloudflare Worker «tetrad-files» — посредник между приложением и Backblaze B2 (см. src/index.js).
+# Публикация: npm run worker:deploy  (перед первой — npx wrangler login и два секрета, см. README)
+name = "tetrad-files"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+SUPABASE_URL = "https://pjiginlbtyuvmfgcqaxc.supabase.co"
+# Публичный ключ Supabase — тот же, что в приложении; данные защищают правила доступа в базе
+SUPABASE_ANON_KEY = "sb_publishable_sVeOU3q7qruQZ_PQz-VcIA_CA_hU8Jh"
+# Откуда разрешено загружать файлы: адрес приложения (через запятую). После публикации добавьте адрес сайта
+ALLOWED_ORIGINS = "http://localhost:1420"
+# Хранилище Backblaze B2 — заполняется после создания bucket (см. README)
+B2_BUCKET = "Students.note18"
+B2_ENDPOINT = "https://s3.eu-central-003.backblazeb2.com"
+B2_REGION = "eu-central-003"
+
+# Секреты (НЕ в этом файле — вводятся командой и хранятся в Cloudflare):
+#   npx wrangler secret put B2_KEY_ID   --config worker/wrangler.toml
+#   npx wrangler secret put B2_APP_KEY  --config worker/wrangler.toml

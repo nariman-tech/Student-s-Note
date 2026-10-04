@@ -1,0 +1,39 @@
+{
+  "name": "student-notes-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "test:e2e": "playwright test",
+    "test:e2e:login": "playwright open --save-storage=e2e/.auth/user.json http://localhost:1420",
+    "test:e2e:login2": "playwright open --save-storage=e2e/.auth/friend.json http://localhost:1420",
+    "worker:deploy": "wrangler deploy --config worker/wrangler.toml",
+    "worker:dev": "wrangler dev --config worker/wrangler.toml"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "dompurify": "^3.4.16",
+    "html2canvas": "^1.4.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@tauri-apps/cli": "^1.6.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.20",
+    "aws4fetch": "^1.0.20",
+    "postcss": "^8.4.41",
+    "tailwindcss": "^3.4.10",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.1",
+    "wrangler": "^4.147.0"
+  }
+}
