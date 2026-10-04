@@ -9,7 +9,7 @@ SUPABASE_URL = "https://pjiginlbtyuvmfgcqaxc.supabase.co"
 # Публичный ключ Supabase — тот же, что в приложении; данные защищают правила доступа в базе
 SUPABASE_ANON_KEY = "sb_publishable_sVeOU3q7qruQZ_PQz-VcIA_CA_hU8Jh"
 # Откуда разрешено загружать файлы: адрес приложения (через запятую). После публикации добавьте адрес сайта
-ALLOWED_ORIGINS = "http://localhost:1420"
+ALLOWED_ORIGINS = "https://studens-notes.vercel.app,http://localhost:1420"
 # Хранилище Backblaze B2 — заполняется после создания bucket (см. README)
 B2_BUCKET = "Students.note18"
 B2_ENDPOINT = "https://s3.eu-central-003.backblazeb2.com"
