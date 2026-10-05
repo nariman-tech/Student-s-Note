@@ -28,7 +28,7 @@ function setShareTarget(setId: string, title: string): ShareTarget {
       enable: () => enableShareLink("flashcard_sets", setId),
       disable: () => disableShareLink("flashcard_sets", setId),
       url: flashcardSetLink,
-      messageText: `Поучи со мной флеш-карты «${title}» в приложении Тетрадь`,
+      messageText: `Поучи со мной флеш-карты «${title}» в приложении Lectiva`,
     },
   };
 }

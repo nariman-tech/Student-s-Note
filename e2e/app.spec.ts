@@ -433,7 +433,7 @@ test("отзыв: отправить; аналитика у администра
   const text = `E2E отзыв ${Date.now()}: добавьте тёмную тему`;
   await page.goto("/");
   await page.getByRole("button", { name: "Отзыв" }).click();
-  await expect(page.getByRole("heading", { name: "Как вам «Тетрадь»?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Как вам Lectiva?" })).toBeVisible();
   await page.getByRole("radio", { name: "Отлично" }).click();
   await page.getByRole("button", { name: "💡 Идея" }).click();
   await page.getByLabel("Текст отзыва").fill(text);

@@ -71,6 +71,11 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-paper">
       <div className="w-full max-w-sm p-8 rounded-card border border-line bg-card">
+        <div className="text-center mb-6">
+          <img src="/icons/icon-192.png" alt="" className="w-14 h-14 mx-auto mb-2 rounded-2xl" />
+          <h1 className="font-display font-800 text-2xl">Lectiva</h1>
+          <p className="text-sm text-ink/50 mt-1">Конспекты, флеш-карты и учёба вместе с группой</p>
+        </div>
         <button
           onClick={handleGoogle}
           disabled={googleLoading}

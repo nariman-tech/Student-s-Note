@@ -170,7 +170,7 @@ export function MobileNav({
   return (
     <>
       <header className="md:hidden sticky top-0 z-20 bg-sidebar text-white flex items-center justify-between px-4 h-14 print:hidden">
-        <span className="font-display font-800">📓 Тетрадь</span>
+        <span className="font-display font-800">📓 Lectiva</span>
         <button
           onClick={() => setProfileOpen(true)}
           className="flex items-center gap-2 rounded-card px-1.5 py-1 hover:bg-white/5"

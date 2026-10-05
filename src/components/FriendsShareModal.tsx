@@ -18,7 +18,7 @@ export interface ShareTarget {
     enable: () => Promise<string>;
     disable: () => Promise<void>;
     url: (token: string) => string;
-    messageText: string; // «Посмотри мой конспект «…» в приложении Тетрадь»
+    messageText: string; // «Посмотри мой конспект «…» в приложении Lectiva»
   };
 }
 

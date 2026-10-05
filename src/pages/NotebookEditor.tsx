@@ -1036,7 +1036,7 @@ export default function NotebookEditor() {
               enable: () => enableShareLink("notebooks", notebook.id),
               disable: () => disableShareLink("notebooks", notebook.id),
               url: notebookLink,
-              messageText: `Посмотри мой конспект «${notebook.title}» в приложении Тетрадь`,
+              messageText: `Посмотри мой конспект «${notebook.title}» в приложении Lectiva`,
             },
           }}
           onClose={() => setShareOpen(false)}

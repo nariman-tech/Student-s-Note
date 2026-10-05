@@ -63,7 +63,7 @@ export function FeedbackModal({ initialRating, onClose }: { initialRating?: numb
           </div>
         ) : (
           <>
-            <h3 className="font-display font-700 mb-1">Как вам «Тетрадь»?</h3>
+            <h3 className="font-display font-700 mb-1">Как вам Lectiva?</h3>
             <p className="text-xs text-ink/50 mb-4">Оценка и пара слов очень помогут</p>
 
             <div className="flex justify-between mb-4" role="radiogroup" aria-label="Оценка">
@@ -130,7 +130,7 @@ export function FeedbackModal({ initialRating, onClose }: { initialRating?: numb
   );
 }
 
-// --- Мягкий вопрос «Нравится Тетрадь?» ---
+// --- Мягкий вопрос «Нравится Lectiva?» ---
 // Появляется, когда человек пользовался приложением хотя бы 3 разных дня, и только если он ещё
 // не оставлял отзыв и не нажимал «Позже» за последние 30 дней. Это удобство на одном устройстве —
 // поэтому localStorage (если он недоступен, вопрос просто не показывается).
@@ -208,10 +208,10 @@ export function FeedbackPrompt() {
   return (
     <div
       role="dialog"
-      aria-label="Нравится Тетрадь?"
+      aria-label="Нравится Lectiva?"
       className="fixed z-40 bottom-20 md:bottom-6 right-4 left-4 md:left-auto md:w-80 bg-card border border-line rounded-card shadow-lg p-4 print:hidden"
     >
-      <p className="text-sm font-medium mb-3">Нравится «Тетрадь»?</p>
+      <p className="text-sm font-medium mb-3">Нравится Lectiva?</p>
       <div className="flex justify-between mb-3">
         {RATINGS.map((r) => (
           <button

@@ -1,4 +1,4 @@
--- Схема базы данных приложения "Тетрадь"
+-- Схема базы данных приложения Lectiva
 -- Выполните этот файл в Supabase SQL Editor (Project → SQL Editor → New query → Run)
 
 create extension if not exists "uuid-ossp";

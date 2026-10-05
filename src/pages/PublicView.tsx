@@ -15,7 +15,7 @@ function Shell({ children, loggedIn }: { children: React.ReactNode; loggedIn: bo
       <header className="border-b border-line bg-card print:hidden">
         <div className="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between">
           <Link to="/" className="font-display font-800 text-lg">
-            📓 Тетрадь
+            📓 Lectiva
           </Link>
           <Link to="/" className="text-sm rounded-card bg-ink text-white px-4 py-2 font-medium hover:bg-ink/90">
             {loggedIn ? "Мои тетради" : "Войти или создать аккаунт"}

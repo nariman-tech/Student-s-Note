@@ -705,7 +705,7 @@ function InviteModal({
             Кто откроет ссылку, сразу вступит в группу (после входа в аккаунт). Или продиктуйте код:{" "}
             <span className="font-mono font-semibold text-ink tracking-wider">{group.inviteCode}</span>
           </p>
-          <MessengerShare url={groupInviteLink(group.inviteCode)} text={`Вступай в нашу группу «${group.name}» в приложении Тетрадь`} />
+          <MessengerShare url={groupInviteLink(group.inviteCode)} text={`Вступай в нашу группу «${group.name}» в приложении Lectiva`} />
         </div>
 
         <button onClick={onClose} className="w-full text-center text-xs text-ink/50 hover:text-ink mt-4">
