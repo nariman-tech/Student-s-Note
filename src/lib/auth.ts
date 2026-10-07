@@ -80,8 +80,10 @@ export async function setNewPassword(password: string) {
   if (error) throw error;
 }
 
+// Выход только на этом устройстве: по умолчанию Supabase завершает вход везде сразу —
+// вышел на компьютере, и выкинуло на телефоне
 export async function signOut() {
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: "local" });
 }
 
 export async function getSession(): Promise<Session | null> {
