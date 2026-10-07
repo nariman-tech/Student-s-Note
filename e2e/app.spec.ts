@@ -493,7 +493,7 @@ test("файлы в конспекте: у файла есть ссылка; у�
   await expect(fileLink).toBeVisible({ timeout: 15_000 });
   const fileUrl = (await fileLink.getAttribute("href"))!;
   expect(fileUrl).toContain(filesPrefix());
-  await expect(page.getByText("Все изменения сохранены")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText("Все изменения сохранены")).toBeVisible({ timeout: 30_000 }); // загрузка в B2 + сохранение
 
   // Есть ли файл в хранилище — спрашиваем Supabase от имени пользователя
   const env = fs.readFileSync(".env", "utf8");
@@ -539,7 +539,7 @@ test("файлы в конспекте: у файла есть ссылка; у�
   // Убираем крестиками → после сохранения файлы удаляются из хранилища
   await editor.locator('[data-action="remove-image"]').click();
   await editor.locator('[data-action="remove-file"]').click();
-  await expect(page.getByText("Все изменения сохранены")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText("Все изменения сохранены")).toBeVisible({ timeout: 30_000 }); // загрузка в B2 + сохранение
   // Удаление идёт после сохранения страницы и проверки «не используется ли файл где-то ещё» — даём время
   await expect.poll(() => exists(imgUrl), { timeout: 30_000 }).toBe(false);
   await expect.poll(() => exists(fileUrl), { timeout: 30_000 }).toBe(false);
