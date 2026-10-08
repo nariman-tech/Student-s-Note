@@ -192,6 +192,11 @@ export default function Login() {
             )}
           </form>
         )}
+        <p className="text-center text-[11px] text-ink/40 mt-6">
+          <a href="/privacy" className="hover:text-ink underline">
+            Политика конфиденциальности
+          </a>
+        </p>
       </div>
     </div>
   );

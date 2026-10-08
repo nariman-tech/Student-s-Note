@@ -28,3 +28,12 @@ test("«Забыли пароль?» открывает форму сброса 
   await page.getByRole("button", { name: "← Вернуться ко входу" }).click();
   await expect(page.getByPlaceholder("Пароль")).toBeVisible();
 });
+
+test("политика конфиденциальности открывается без входа", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: "Политика конфиденциальности" }).click();
+  await expect(page).toHaveURL(/\/privacy$/);
+  await expect(page.getByRole("heading", { name: "Политика конфиденциальности" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Privacy Policy" })).toBeVisible();
+  await page.screenshot({ path: "screenshots/privacy.png", fullPage: true });
+});

@@ -15,6 +15,7 @@ const Friends = lazy(() => import("./pages/Friends"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const PublicNotebookView = lazy(() => import("./pages/PublicView").then((m) => ({ default: m.PublicNotebookView })));
 const PublicFlashcardsView = lazy(() => import("./pages/PublicView").then((m) => ({ default: m.PublicFlashcardsView })));
 
@@ -93,6 +94,15 @@ export default function App() {
   }, [session?.user?.id]);
 
   // Ссылки из мессенджеров (/s/n/…, /s/f/…) открываются и без входа в аккаунт
+  // Политика конфиденциальности — тоже без входа (на неё ссылается экран входа Google)
+  if (location.pathname === "/privacy") {
+    return (
+      <Suspense fallback={screenLoading}>
+        <PrivacyPage />
+      </Suspense>
+    );
+  }
+
   if (location.pathname.startsWith("/s/")) {
     return (
       <Suspense fallback={screenLoading}>
