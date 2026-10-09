@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   signInWithPassword,
   signUpWithPassword,
@@ -18,6 +18,20 @@ export default function Login() {
   const [needsConfirm, setNeedsConfirm] = useState(false);
   const [resendState, setResendState] = useState<"idle" | "sending" | "sent">("idle");
   const [forgotOpen, setForgotOpen] = useState(false);
+
+  // Вход через Google не удался — Supabase возвращает на сайт с ошибкой в адресе
+  // (?error_description=… или #error_description=…). Показываем её понятным текстом и убираем из адреса,
+  // иначе человек молча видит экран входа заново и думает, что кнопка не работает
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const message = query.get("error_description") ?? hash.get("error_description");
+    if (!message) return;
+    const code = query.get("error_code") ?? hash.get("error_code") ?? undefined;
+    setStatus("error");
+    setErrorMsg(authErrorMessage({ code, message: message.replace(/\+/g, " ") }));
+    window.history.replaceState(null, "", window.location.pathname);
+  }, []);
 
   async function handleResend() {
     setResendState("sending");

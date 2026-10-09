@@ -37,3 +37,12 @@ test("политика конфиденциальности открываетс
   await expect(page.getByRole("heading", { name: "Privacy Policy" })).toBeVisible();
   await page.screenshot({ path: "screenshots/privacy.png", fullPage: true });
 });
+
+test("неудачный вход через Google показывает понятную ошибку, а не молчит", async ({ page }) => {
+  // Так Supabase возвращает на сайт, если регистрация закрыта
+  await page.goto("/#error=access_denied&error_code=signup_disabled&error_description=Signups+not+allowed+for+this+instance");
+  await expect(page.getByText("Регистрация новых пользователей сейчас закрыта.")).toBeVisible();
+  await expect(page).not.toHaveURL(/error_description/); // адрес очищен
+  await page.goto("/?error=server_error&error_description=Unsupported+provider%3A+provider+is+not+enabled");
+  await expect(page.getByText("Вход через Google пока не настроен. Войдите по почте и паролю.")).toBeVisible();
+});
