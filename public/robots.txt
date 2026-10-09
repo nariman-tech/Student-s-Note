@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+# Личные страницы приложения и ссылки «поделиться» в поиск не нужны
+Disallow: /s/
+Disallow: /join/
+Disallow: /admin
+Sitemap: https://lectiva-app.vercel.app/sitemap.xml
