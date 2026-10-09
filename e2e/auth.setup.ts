@@ -15,6 +15,7 @@ setup("вход в тестовый аккаунт", async ({ page }) => {
   }
 
   await page.goto("/");
+  await page.getByRole("button", { name: "Войти по почте и паролю" }).click();
   await page.getByPlaceholder("Почта").fill(email);
   await page.getByPlaceholder("Пароль").fill(password);
   await page.locator("form").getByRole("button", { name: "Войти" }).click();

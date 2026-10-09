@@ -1,22 +1,15 @@
 import { useEffect, useState } from "react";
-import {
-  signInWithPassword,
-  signUpWithPassword,
-  signInWithGoogle,
-  resendConfirmation,
-  sendPasswordReset,
-  authErrorMessage,
-} from "../lib/auth";
+import { signInWithPassword, signInWithGoogle, sendPasswordReset, authErrorMessage } from "../lib/auth";
 
+// Вход: новые пользователи регистрируются только через Google (один клик, без фейковых почт и писем).
+// Вход по почте и паролю оставлен для уже существующих аккаунтов (в том числе тестовых) — спрятан за ссылкой.
 export default function Login() {
-  const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "check-email" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [needsConfirm, setNeedsConfirm] = useState(false);
-  const [resendState, setResendState] = useState<"idle" | "sending" | "sent">("idle");
+  const [emailOpen, setEmailOpen] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
 
   // Вход через Google не удался — Supabase возвращает на сайт с ошибкой в адресе
@@ -33,46 +26,24 @@ export default function Login() {
     window.history.replaceState(null, "", window.location.pathname);
   }, []);
 
-  async function handleResend() {
-    setResendState("sending");
-    try {
-      await resendConfirmation(email.trim());
-      setResendState("sent");
-    } catch (err: any) {
-      setResendState("idle");
-      setStatus("error");
-      setErrorMsg(authErrorMessage(err));
-    }
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim() || !password) return;
     setStatus("loading");
     setErrorMsg("");
-    setNeedsConfirm(false);
-    setResendState("idle");
     try {
-      if (mode === "login") {
-        await signInWithPassword(email.trim(), password);
-        // Дальше сессия появится сама — App.tsx подхватит её через onAuthStateChange
-      } else {
-        const hasSession = await signUpWithPassword(email.trim(), password);
-        if (!hasSession) {
-          setStatus("check-email");
-          return;
-        }
-      }
+      await signInWithPassword(email.trim(), password);
+      // Дальше сессия появится сама — App.tsx подхватит её через onAuthStateChange
       setStatus("idle");
     } catch (err: any) {
       setStatus("error");
       setErrorMsg(authErrorMessage(err));
-      setNeedsConfirm(err?.code === "email_not_confirmed" || /email not confirmed/i.test(err?.message ?? ""));
     }
   }
 
   async function handleGoogle() {
     setGoogleLoading(true);
+    setStatus("idle");
     try {
       await signInWithGoogle();
     } catch (err: any) {
@@ -83,86 +54,59 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-paper">
+    <div className="min-h-screen flex items-center justify-center bg-paper p-4">
       <div className="w-full max-w-sm p-8 rounded-card border border-line bg-card">
         <div className="text-center mb-6">
           <img src="/icons/icon-192.png" alt="" className="w-14 h-14 mx-auto mb-2 rounded-2xl" />
           <h1 className="font-display font-800 text-2xl">Lectiva</h1>
           <p className="text-sm text-ink/50 mt-1">Конспекты, флеш-карты и учёба вместе с группой</p>
         </div>
+
         <button
           onClick={handleGoogle}
           disabled={googleLoading}
-          className="w-full flex items-center justify-center gap-2 rounded-card border border-line py-2.5 text-sm font-medium hover:border-ink/40 mb-4 disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-2 rounded-card bg-ink text-white py-3 text-sm font-medium hover:bg-ink/90 disabled:opacity-50"
         >
+          <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
+            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+            <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z" />
+            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z" />
+          </svg>
           {googleLoading ? "Открываем Google…" : "Войти через Google"}
         </button>
+        <p className="text-center text-[11px] text-ink/40 mt-2">Нет аккаунта? Он создастся сам при первом входе</p>
 
-        <div className="flex items-center gap-3 mb-4">
-          <span className="flex-1 h-px bg-line" />
-          <span className="text-xs text-ink/40">или</span>
-          <span className="flex-1 h-px bg-line" />
-        </div>
+        {status === "error" && !emailOpen && <p className="text-xs text-coral text-center mt-3">{errorMsg}</p>}
 
-        <div className="flex rounded-card bg-paper p-1 mb-4">
+        {!emailOpen ? (
           <button
             onClick={() => {
-              setMode("login");
-              setForgotOpen(false);
+              setEmailOpen(true);
               setStatus("idle");
             }}
-            className={`flex-1 text-sm py-1.5 rounded-card ${mode === "login" ? "bg-card shadow-sm font-medium" : "text-ink/50"}`}
+            className="block mx-auto text-xs text-ink/50 hover:text-ink mt-6"
           >
-            Войти
+            Войти по почте и паролю
           </button>
-          <button
-            onClick={() => {
-              setMode("register");
-              setForgotOpen(false);
-              setStatus("idle");
-            }}
-            className={`flex-1 text-sm py-1.5 rounded-card ${mode === "register" ? "bg-card shadow-sm font-medium" : "text-ink/50"}`}
-          >
-            Регистрация
-          </button>
-        </div>
-
-        {status === "check-email" ? (
-          <div className="text-sm text-sage bg-sage/10 rounded-card p-3">
-            <p>
-              Проверьте почту {email} — там ссылка для подтверждения (если письма нет, загляните в «Спам»).
-              После подтверждения возвращайтесь сюда и входите паролем, который только что придумали.
-            </p>
-            <div className="flex gap-3 mt-3">
-              <button
-                onClick={() => {
-                  setMode("login");
-                  setForgotOpen(false);
-                  setStatus("idle");
-                }}
-                className="text-xs rounded-card bg-ink text-white px-3 py-1.5 font-medium hover:bg-ink/90"
-              >
-                Я подтвердил — войти
-              </button>
-              <button
-                onClick={handleResend}
-                disabled={resendState !== "idle"}
-                className="text-xs text-ink/60 hover:text-ink disabled:opacity-60"
-              >
-                {resendState === "sent" ? "Письмо отправлено ✓" : resendState === "sending" ? "Отправляем…" : "Отправить ещё раз"}
-              </button>
-            </div>
-          </div>
         ) : forgotOpen ? (
-          <ForgotPassword initialEmail={email} onBack={() => setForgotOpen(false)} />
+          <div className="mt-6">
+            <ForgotPassword initialEmail={email} onBack={() => setForgotOpen(false)} />
+          </div>
         ) : (
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="mt-6">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="flex-1 h-px bg-line" />
+              <span className="text-xs text-ink/40">вход по почте</span>
+              <span className="flex-1 h-px bg-line" />
+            </div>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Почта"
+              autoComplete="email"
               className="w-full rounded-card border border-line px-3 py-2.5 text-sm mb-3"
             />
             <input
@@ -172,40 +116,42 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Пароль"
+              autoComplete="current-password"
               className="w-full rounded-card border border-line px-3 py-2.5 text-sm mb-3"
             />
             <button
               type="submit"
               disabled={status === "loading"}
-              className="w-full rounded-card bg-ink text-white py-2.5 text-sm font-medium hover:bg-ink/90 disabled:opacity-50"
+              className="w-full rounded-card border border-line py-2.5 text-sm font-medium hover:border-ink/40 disabled:opacity-50"
             >
-              {status === "loading" ? "Секунду…" : mode === "login" ? "Войти" : "Зарегистрироваться"}
+              {status === "loading" ? "Секунду…" : "Войти"}
             </button>
             {status === "error" && <p className="text-xs text-coral mt-2">{errorMsg}</p>}
-            {status === "error" && needsConfirm && (
+            <div className="flex justify-between mt-3">
               <button
                 type="button"
-                onClick={handleResend}
-                disabled={resendState !== "idle"}
-                className="text-xs text-ink/60 hover:text-ink underline mt-1 disabled:opacity-60 disabled:no-underline"
+                onClick={() => {
+                  setEmailOpen(false);
+                  setStatus("idle");
+                }}
+                className="text-xs text-ink/50 hover:text-ink"
               >
-                {resendState === "sent" ? "Письмо отправлено ✓" : resendState === "sending" ? "Отправляем…" : "Отправить письмо ещё раз"}
+                ← Назад
               </button>
-            )}
-            {mode === "login" && (
               <button
                 type="button"
                 onClick={() => {
                   setForgotOpen(true);
                   setStatus("idle");
                 }}
-                className="block mx-auto text-xs text-ink/50 hover:text-ink mt-3"
+                className="text-xs text-ink/50 hover:text-ink"
               >
                 Забыли пароль?
               </button>
-            )}
+            </div>
           </form>
         )}
+
         <p className="text-center text-[11px] text-ink/40 mt-6">
           <a href="/privacy" className="hover:text-ink underline">
             Политика конфиденциальности

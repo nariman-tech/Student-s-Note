@@ -6,10 +6,13 @@ test("страница входа (десктоп)", async ({ page }) => {
   await page.screenshot({ path: "screenshots/login-desktop.png", fullPage: true });
 });
 
-test("переключение на регистрацию", async ({ page }) => {
+test("вход по почте спрятан за ссылкой, регистрации по почте нет", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Регистрация" }).click();
-  await page.screenshot({ path: "screenshots/register-desktop.png", fullPage: true });
+  await expect(page.getByRole("button", { name: "Регистрация" })).toHaveCount(0);
+  await expect(page.getByPlaceholder("Пароль")).toHaveCount(0);
+  await page.getByRole("button", { name: "Войти по почте и паролю" }).click();
+  await expect(page.getByPlaceholder("Пароль")).toBeVisible();
+  await page.screenshot({ path: "screenshots/login-email.png", fullPage: true });
 });
 
 test("страница входа (мобильный)", async ({ page }) => {
@@ -21,6 +24,7 @@ test("страница входа (мобильный)", async ({ page }) => {
 
 test("«Забыли пароль?» открывает форму сброса и возвращает ко входу", async ({ page }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "Войти по почте и паролю" }).click();
   await page.getByRole("button", { name: "Забыли пароль?" }).click();
   await expect(page.getByText("Введите почту — пришлём ссылку для сброса пароля.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Прислать ссылку" })).toBeVisible();
