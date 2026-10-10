@@ -120,7 +120,18 @@ Partner Center → продукт Lectiva → **Отправка (Submission) �
 | Политика конфиденциальности | https://lectiva-app.vercel.app/privacy |
 | Сайт | https://lectiva-app.vercel.app |
 | Контакт поддержки | ваша почта |
-| Copyright | © 2026 Nariman Madiyev |
+| Copyright | © 2026 Madiyev Nariman |
 | Скриншоты (Desktop) | `screenshot-notebook.png`, `screenshot-notebooks.png`, `screenshot-flashcards.png`, `screenshot-group.png` (1920×1080) |
 | Логотип для Store | `public/icons/icon-512.png` |
 | Возрастной рейтинг | анкета IARC: учебное приложение; есть **общение пользователей** (чат групп) и **обмен файлами** — ответьте «да» на эти вопросы |
+
+## Данные пакета для PWABuilder (Partner Center → Product identity)
+
+| Поле PWABuilder | Значение |
+|---|---|
+| Package ID | `MadiyevNariman.Lectiva` |
+| Publisher ID | `CN=8B09CDF9-E9A8-4C97-8A27-05006AD45941` |
+| Publisher display name | `Madiyev Nariman` |
+| App name | `Lectiva` |
+| App version | `1.0.0` (при каждом новом пакете — увеличивать: 1.0.1, 1.1.0…) |
+| Language | `ru` |
