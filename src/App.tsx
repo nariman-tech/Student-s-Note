@@ -16,13 +16,16 @@ const Onboarding = lazy(() => import("./pages/Onboarding"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
+const Settings = lazy(() => import("./pages/Settings"));
 const PublicNotebookView = lazy(() => import("./pages/PublicView").then((m) => ({ default: m.PublicNotebookView })));
 const PublicFlashcardsView = lazy(() => import("./pages/PublicView").then((m) => ({ default: m.PublicFlashcardsView })));
 
 const pageLoading = <div className="p-8 text-sm text-ink/40">Загрузка…</div>;
 const screenLoading = <div className="min-h-screen flex items-center justify-center text-sm text-ink/40">Загрузка…</div>;
 import { getSession, onAuthStateChange, ensureProfile } from "./lib/auth";
-import { getMyPublicProfile } from "./lib/store";
+import { getMyPublicProfile, syncPendingSaves } from "./lib/store";
+import { setOfflineUser } from "./lib/offline";
+import { SyncToast } from "./components/OfflineStatus";
 import { track } from "./lib/analytics";
 import { FeedbackPrompt } from "./components/Feedback";
 
@@ -38,11 +41,19 @@ function AppShell({ profile, onProfileChange }: { profile: PublicProfile; onProf
     track("app_open");
   }, []);
 
+  // Правки, сделанные без интернета, — отправляем при запуске и как только сеть вернулась
+  useEffect(() => {
+    syncPendingSaves().catch(() => {});
+    const onOnline = () => syncPendingSaves().catch(() => {});
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, []);
+
   return (
     <div className="flex min-h-screen">
-      <Sidebar profile={profile} onProfileChange={onProfileChange} />
+      <Sidebar profile={profile} />
       <div className="flex-1 min-w-0 flex flex-col">
-      <MobileNav profile={profile} onProfileChange={onProfileChange} />
+      <MobileNav profile={profile} />
       {/* pb-20 на телефоне — место под нижнее меню */}
       <main className="flex-1 overflow-y-auto pb-20 md:pb-0 print:pb-0">
         <Suspense fallback={pageLoading}>
@@ -55,11 +66,13 @@ function AppShell({ profile, onProfileChange }: { profile: PublicProfile; onProf
           <Route path="/join/:code" element={<JoinByLink />} />
           <Route path="/friends" element={<Friends />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/settings" element={<Settings profile={profile} onProfileChange={onProfileChange} />} />
         </Routes>
         </Suspense>
       </main>
       </div>
       <FeedbackPrompt />
+      <SyncToast />
     </div>
   );
 }
@@ -85,6 +98,9 @@ export default function App() {
       setProfile(undefined);
       return;
     }
+    // Офлайн-кэш — свой у каждого пользователя (ключи начинаются с его id): данные другого
+    // аккаунта на этом устройстве не покажутся
+    setOfflineUser(session.user.id);
     (async () => {
       // При первом входе создаём строку приватного профиля — дальше всё (тетради, заметки) ссылается на неё
       await ensureProfile(session.user.id, session.user.email ?? undefined).catch(console.error);

@@ -1,10 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { updateMyPublicProfile, cleanUsername, profileErrorMessage, formatPublicId } from "../lib/store";
 import { uploadImage } from "../lib/upload";
-import { signOut } from "../lib/auth";
-import { isAdmin } from "../lib/analytics";
-import { FeedbackModal } from "./Feedback";
-import { useNavigate } from "react-router-dom";
 import { PublicProfile } from "../types";
 
 // Настройки профиля: аватарка и юзернейм. ID показываем, но менять его нельзя.
@@ -26,14 +22,6 @@ export default function ProfileModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [admin, setAdmin] = useState(false);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    isAdmin().then(setAdmin);
-  }, []);
-
   // Освобождаем локальное превью (blob:), когда оно больше не нужно
   useEffect(() => {
     return () => {
@@ -86,7 +74,7 @@ export default function ProfileModal({
   return (
     <div className="fixed inset-0 bg-ink/40 flex items-center justify-center z-40 p-4 text-ink" onClick={saving ? undefined : onClose}>
       <div className="bg-card rounded-card p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-        <h3 className="font-display font-700 mb-4">Профиль</h3>
+        <h3 className="font-display font-700 text-lg mb-4">Профиль</h3>
 
         <div className="flex items-center gap-4 mb-5">
           <button
@@ -148,31 +136,6 @@ export default function ProfileModal({
           </button>
         </div>
 
-        {/* На телефоне нет боковой панели — отзыв, аналитика и выход здесь */}
-        <div className="md:hidden flex flex-col gap-2 mt-5 pt-4 border-t border-line">
-          <button onClick={() => setFeedbackOpen(true)} className="text-sm text-ink/70 hover:text-ink text-center">
-            💬 Оставить отзыв
-          </button>
-          {admin && (
-            <button
-              onClick={() => {
-                onClose();
-                navigate("/admin");
-              }}
-              className="text-sm text-ink/70 hover:text-ink text-center"
-            >
-              📊 Аналитика
-            </button>
-          )}
-        </div>
-        <button
-          onClick={() => signOut()}
-          disabled={saving}
-          className="md:hidden w-full mt-3 text-sm text-coral text-center"
-        >
-          🚪 Выйти из аккаунта
-        </button>
-        {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
       </div>
     </div>
   );

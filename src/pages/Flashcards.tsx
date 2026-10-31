@@ -70,7 +70,7 @@ export default function Flashcards() {
   const activeSet = sets.find((s) => s.id === activeSetId) ?? activeShared?.set;
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto">
+    <div className="px-4 py-6 md:px-10 md:py-10 max-w-5xl mx-auto">
       {loading ? (
         <p className="text-sm text-ink/40">Загрузка…</p>
       ) : !activeSet ? (
@@ -144,7 +144,7 @@ function ModulesGrid({
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h2 className="text-2xl font-display font-800">Модули флеш-карт</h2>
+          <h2 className="text-3xl md:text-4xl font-display font-800">Модули флеш-карт</h2>
           <p className="text-sm text-ink/50 mt-1">Свои наборы терминов для изучения</p>
         </div>
         <button
@@ -189,17 +189,21 @@ function ModuleCard({ set, ownerUsername, onOpen }: { set: FlashcardSet; ownerUs
       <div className="absolute inset-x-2 -bottom-1.5 h-full rounded-card border border-line bg-card" aria-hidden />
       <div className="absolute inset-x-1 -bottom-0.5 h-full rounded-card border border-line bg-card" aria-hidden />
 
-      <button onClick={onOpen} className="relative w-full text-left rounded-card border border-line bg-card overflow-hidden hover:border-ink/30">
+      <button onClick={onOpen} className="relative w-full text-left rounded-card border border-line bg-card overflow-hidden shadow-lift transition-transform duration-200 hover:-translate-y-1">
+        {/* Лицевая сторона верхней карточки: первый термин модуля */}
         <div
-          className="w-full aspect-square flex items-center justify-center text-3xl"
+          className="relative w-full aspect-square flex items-center justify-center p-4 text-center"
           style={{ backgroundColor: set.color }}
         >
-          🗂️
+          <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-black/10" aria-hidden />
+          <span className="relative font-display font-800 text-white text-lg leading-tight line-clamp-4 break-words drop-shadow-sm">
+            {set.cards[0]?.front || set.title}
+          </span>
         </div>
         <div className="p-3">
           <h3 className="font-display font-700 text-sm leading-snug mb-1 line-clamp-2">{set.title}</h3>
           {ownerUsername && <p className="text-xs text-lavender font-medium mb-0.5">от @{ownerUsername}</p>}
-          <p className="text-xs text-ink/50">{set.cards.length} карточек</p>
+          <p className="text-xs text-ink/50">{set.cards.length} {cardsWord(set.cards.length)}</p>
         </div>
       </button>
 
@@ -338,7 +342,7 @@ export function StudySession({
           <p className="text-3xl mb-3">🎉</p>
           <p className="font-display font-700 mb-1">Вы выучили весь модуль!</p>
           <p className="text-sm text-ink/50 mb-5">
-            {knownCount} из {set.cards.length} карточек — знаю
+            {knownCount} из {set.cards.length} {cardsWord(set.cards.length)} — знаю
           </p>
           <button onClick={restart} className="px-4 py-2 text-sm rounded-card bg-ink text-white hover:bg-ink/90">
             Повторить ещё раз
@@ -471,4 +475,12 @@ function CreateSetModal({
       </div>
     </div>
   );
+}
+
+// 1 карточка, 2 карточки, 5 карточек
+function cardsWord(n: number): string {
+  const d = n % 10, dd = n % 100;
+  if (d === 1 && dd !== 11) return "карточка";
+  if (d >= 2 && d <= 4 && (dd < 12 || dd > 14)) return "карточки";
+  return "карточек";
 }

@@ -35,10 +35,10 @@ export default function Groups() {
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-2xl mx-auto">
+    <div className="px-4 py-6 md:px-10 md:py-10 max-w-2xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <div>
-          <h2 className="text-2xl font-display font-800">Группы</h2>
+          <h2 className="text-3xl md:text-4xl font-display font-800">Группы</h2>
           <p className="text-sm text-ink/50 mt-1">Универы, курсы и потоки — с общим чатом</p>
         </div>
         <div className="flex gap-2 shrink-0">

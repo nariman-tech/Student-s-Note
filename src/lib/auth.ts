@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { clearOfflineData, isOnline } from "./offline";
 import type { Session } from "@supabase/supabase-js";
 
 // Регистрация по email+паролю. Возвращает true, если сессия появилась сразу
@@ -82,13 +83,31 @@ export async function setNewPassword(password: string) {
 
 // Выход только на этом устройстве: по умолчанию Supabase завершает вход везде сразу —
 // вышел на компьютере, и выкинуло на телефоне
+// Заодно стираем офлайн-копии конспектов на этом устройстве
 export async function signOut() {
   await supabase.auth.signOut({ scope: "local" });
+  await clearOfflineData();
 }
 
+// Без интернета Supabase не может обновить истёкший токен и отвечает «сессии нет», хотя вход
+// сохранён на устройстве. Тогда берём сохранённую сессию как есть: данные покажутся из офлайн-кэша,
+// а когда сеть вернётся, Supabase сам обновит токен (придёт событие TOKEN_REFRESHED)
 export async function getSession(): Promise<Session | null> {
   const { data } = await supabase.auth.getSession();
-  return data.session;
+  if (data.session || isOnline()) return data.session;
+  return storedSession();
+}
+
+function storedSession(): Session | null {
+  try {
+    const key = (supabase.auth as any).storageKey as string | undefined;
+    const raw = key ? localStorage.getItem(key) : null;
+    const parsed = raw ? JSON.parse(raw) : null;
+    const session = parsed?.currentSession ?? parsed; // старый и новый формат хранения
+    return session?.user?.id ? (session as Session) : null;
+  } catch {
+    return null;
+  }
 }
 
 // isRecovery — пользователь пришёл по ссылке «сбросить пароль» из письма: нужно показать

@@ -4,6 +4,7 @@ import { uploadImage } from "../lib/upload";
 import NotebookCard from "../components/NotebookCard";
 import SearchBar from "../components/SearchBar";
 import { Notebook, SharedNotebook } from "../types";
+import Icon from "../components/Icon";
 
 const COLORS = ["#FF6B5B", "#8C8FE0", "#6B9080", "#FFC93C", "#5AA9E6"];
 
@@ -69,29 +70,41 @@ export default function Notebooks() {
     }
   }
 
+  const greeting = greetingForNow();
+
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+    <div className="px-4 py-6 md:px-10 md:py-10 max-w-6xl mx-auto">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 gap-4">
         <div>
-          <h2 className="text-2xl font-display font-800">Мои тетради</h2>
-          <p className="text-sm text-ink/50 mt-1">Все конспекты в одном месте</p>
+          <p className="text-sm text-ink/50">{greeting}</p>
+          <h2 className="text-3xl md:text-4xl font-display font-800 mt-0.5">Мои тетради</h2>
         </div>
         <SearchBar />
       </div>
 
-      <button
-        onClick={() => setShowNewModal(true)}
-        className="mb-6 inline-flex items-center gap-2 rounded-card bg-ink text-white text-sm font-medium px-4 py-2.5 hover:bg-ink/90"
-      >
-        + Новая тетрадь
-      </button>
-
       {loading ? (
-        <p className="text-sm text-ink/40">Загрузка…</p>
-      ) : notebooks.length === 0 ? (
-        <p className="text-sm text-ink/50">Пока нет ни одной тетради — создайте первую.</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-5 gap-y-7">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="aspect-[4/5] rounded-r-card rounded-l-[4px] bg-line/60 animate-pulse" />
+          ))}
+        </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-5 gap-y-7">
+          {/* «Новая тетрадь» — пустое место на полке в форме тетради */}
+          <button
+            onClick={() => setShowNewModal(true)}
+            className="group text-left self-start w-full"
+          >
+            <div className="aspect-[4/5] rounded-r-card rounded-l-[4px] border-2 border-dashed border-ink/15 bg-card/60 flex flex-col items-center justify-center gap-2 text-ink/50 transition-colors group-hover:border-ink/40 group-hover:text-ink group-hover:bg-card">
+              <span className="w-11 h-11 rounded-full bg-highlight text-ink flex items-center justify-center shadow-lift">
+                <Icon name="plus" size={22} />
+              </span>
+              <span className="text-sm font-semibold">Новая тетрадь</span>
+            </div>
+            {notebooks.length === 0 && (
+              <p className="text-xs text-ink/45 mt-2.5 pl-1">Начните с первого предмета</p>
+            )}
+          </button>
           {notebooks.map((nb) => (
             <NotebookCard key={nb.id} notebook={nb} />
           ))}
@@ -99,19 +112,19 @@ export default function Notebooks() {
       )}
 
       {shared.length > 0 && (
-        <div className="mt-10">
-          <h3 className="font-display font-700 mb-1">Со мной поделились</h3>
-          <p className="text-sm text-ink/50 mb-4">Тетради друзей — можно читать, но не менять</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <section className="mt-14">
+          <h3 className="text-xl font-display font-800">Со мной поделились</h3>
+          <p className="text-sm text-ink/50 mt-1 mb-5">Тетради друзей — можно читать, но не менять</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-5 gap-y-7">
             {shared.map((s) => (
               <NotebookCard key={s.notebook.id} notebook={s.notebook} ownerUsername={s.owner.username} />
             ))}
           </div>
-        </div>
+        </section>
       )}
 
       {showNewModal && (
-        <div className="fixed inset-0 bg-ink/40 flex items-center justify-center z-20" onClick={resetModal}>
+        <div className="fixed inset-0 bg-ink/40 flex items-center justify-center z-40 p-4" onClick={resetModal}>
           <div className="bg-card rounded-card p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-display font-700 mb-4">Новая тетрадь</h3>
 
@@ -170,4 +183,12 @@ export default function Notebooks() {
       )}
     </div>
   );
+}
+
+function greetingForNow(): string {
+  const h = new Date().getHours();
+  if (h < 5) return "Доброй ночи";
+  if (h < 12) return "Доброе утро";
+  if (h < 18) return "Добрый день";
+  return "Добрый вечер";
 }

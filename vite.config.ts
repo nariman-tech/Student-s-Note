@@ -1,9 +1,24 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
+
+// Список всех файлов сборки для офлайн-режима: service worker (public/sw.js) скачивает их
+// при установке, чтобы без интернета открывались все разделы, а не только уже посещённые
+function precacheList(): Plugin {
+  return {
+    name: "lectiva-precache-list",
+    apply: "build",
+    generateBundle(_, bundle) {
+      const files = Object.keys(bundle)
+        .filter((f) => f.startsWith("assets/") && !f.endsWith(".map"))
+        .map((f) => `/${f}`);
+      this.emitFile({ type: "asset", fileName: "precache.json", source: JSON.stringify(files) });
+    },
+  };
+}
 import react from "@vitejs/plugin-react";
 
 // Tauri требует фиксированный порт и отключенный auto-open
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), precacheList()],
   server: {
     port: 1420,
     strictPort: true,
