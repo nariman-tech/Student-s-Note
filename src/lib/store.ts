@@ -5,6 +5,17 @@
 import { supabase } from "./supabase";
 import { removeUploadedFiles } from "./upload";
 import {
+  cached,
+  updateCached,
+  isOnline,
+  isNetworkError,
+  queuePageSave,
+  pendingPageSave,
+  pendingPageSaves,
+  dropPageSave,
+  setOfflineUser,
+} from "./offline";
+import {
   Notebook,
   NotePage,
   PageSummary,
@@ -22,31 +33,39 @@ import {
   SearchResult,
 } from "../types";
 
+// id берём из сохранённой сессии, а не запросом к серверу (getUser) — так он есть и без интернета.
+// Доступ к данным всё равно проверяет база по токену (правила RLS)
 export async function currentUserId(): Promise<string> {
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) throw new Error("Не авторизованы");
-  return data.user.id;
+  const { data } = await supabase.auth.getSession();
+  const id = data.session?.user.id;
+  if (!id) throw new Error("Не авторизованы");
+  setOfflineUser(id);
+  return id;
 }
 
 // --- Тетради ---
 
 // Только свои личные тетради — открытые мне друзьями отдаёт getSharedWithMe, тетради групп — getGroupNotebooks
 export async function getNotebooks(): Promise<Notebook[]> {
-  const userId = await currentUserId();
-  const { data, error } = await supabase
-    .from("notebooks")
-    .select("*")
-    .eq("owner_id", userId)
-    .is("group_id", null)
-    .order("updated_at", { ascending: false });
-  if (error) throw error;
-  return (data ?? []).map(rowToNotebook);
+  return cached("notebooks", async () => {
+    const userId = await currentUserId();
+    const { data, error } = await supabase
+      .from("notebooks")
+      .select("*")
+      .eq("owner_id", userId)
+      .is("group_id", null)
+      .order("updated_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(rowToNotebook);
+  });
 }
 
 export async function getNotebook(id: string): Promise<Notebook | undefined> {
-  const { data, error } = await supabase.from("notebooks").select("*").eq("id", id).maybeSingle();
-  if (error) throw error;
-  return data ? rowToNotebook(data) : undefined;
+  return cached(`notebook:${id}`, async () => {
+    const { data, error } = await supabase.from("notebooks").select("*").eq("id", id).maybeSingle();
+    if (error) throw error;
+    return data ? rowToNotebook(data) : undefined;
+  });
 }
 
 // Поиск по названиям и по тексту конспектов (свои тетради и открытые мне друзьями) —
@@ -157,16 +176,18 @@ export async function unshareNotebook(notebookId: string, friendUserId: string) 
 }
 
 export async function getSharedWithMe(): Promise<SharedNotebook[]> {
-  const userId = await currentUserId();
-  const { data, error } = await supabase
-    .from("notebook_shares")
-    .select("created_at, notebooks(*), owner:public_profiles!notebook_shares_owner_id_fkey(id, username, avatar_url, public_id)")
-    .eq("shared_with", userId)
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return (data ?? [])
-    .filter((r: any) => r.notebooks && r.owner)
-    .map((r: any) => ({ notebook: rowToNotebook(r.notebooks), owner: rowToProfile(r.owner) }));
+  return cached("shared-notebooks", async () => {
+    const userId = await currentUserId();
+    const { data, error } = await supabase
+      .from("notebook_shares")
+      .select("created_at, notebooks(*), owner:public_profiles!notebook_shares_owner_id_fkey(id, username, avatar_url, public_id)")
+      .eq("shared_with", userId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? [])
+      .filter((r: any) => r.notebooks && r.owner)
+      .map((r: any) => ({ notebook: rowToNotebook(r.notebooks), owner: rowToProfile(r.owner) }));
+  });
 }
 
 export async function touchNotebook(id: string) {
@@ -189,27 +210,31 @@ function rowToNotebook(row: any): Notebook {
 
 // Тетради группы — для вкладки «Тетради» в группе
 export async function getGroupNotebooks(groupId: string): Promise<Notebook[]> {
-  const { data, error } = await supabase
-    .from("notebooks")
-    .select("*")
-    .eq("group_id", groupId)
-    .order("updated_at", { ascending: false });
-  if (error) throw error;
-  return (data ?? []).map(rowToNotebook);
+  return cached(`group-notebooks:${groupId}`, async () => {
+    const { data, error } = await supabase
+      .from("notebooks")
+      .select("*")
+      .eq("group_id", groupId)
+      .order("updated_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(rowToNotebook);
+  });
 }
 
 // --- Страницы тетради ---
 
 // Список страниц по порядку — без содержимого, чтобы тетрадь со многими страницами открывалась быстро
 export async function getPages(notebookId: string): Promise<PageSummary[]> {
-  const { data, error } = await supabase
-    .from("notes")
-    .select("id, title, position")
-    .eq("notebook_id", notebookId)
-    .order("position", { ascending: true })
-    .order("created_at", { ascending: true });
-  if (error) throw error;
-  return (data ?? []).map((r) => ({ id: r.id, title: r.title, position: r.position }));
+  return cached(`pages:${notebookId}`, async () => {
+    const { data, error } = await supabase
+      .from("notes")
+      .select("id, title, position")
+      .eq("notebook_id", notebookId)
+      .order("position", { ascending: true })
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+    return (data ?? []).map((r) => ({ id: r.id, title: r.title, position: r.position }));
+  });
 }
 
 function rowToPage(r: any): NotePage {
@@ -225,14 +250,27 @@ function rowToPage(r: any): NotePage {
   };
 }
 
+// Если на этом устройстве есть ещё не отправленная правка страницы (сделанная без интернета) —
+// показываем её, а не серверную версию: иначе после перезагрузки правка «исчезла» бы с экрана
 export async function getPage(pageId: string): Promise<NotePage | undefined> {
-  const { data, error } = await supabase.from("notes").select("*").eq("id", pageId).maybeSingle();
-  if (error) throw error;
-  return data ? rowToPage(data) : undefined;
+  const page = await cached(`page:${pageId}`, async () => {
+    const { data, error } = await supabase.from("notes").select("*").eq("id", pageId).maybeSingle();
+    if (error) throw error;
+    return data ? rowToPage(data) : undefined;
+  });
+  const pending = page && (await pendingPageSave(pageId));
+  if (page && pending) {
+    return { ...page, content: pending.content, attachments: pending.attachments as NoteAttachment[] };
+  }
+  return page;
 }
 
 // Все страницы с содержимым — для PDF всей тетради
 export async function getAllPages(notebookId: string): Promise<NotePage[]> {
+  return cached(`all-pages:${notebookId}`, () => getAllPagesFromServer(notebookId));
+}
+
+async function getAllPagesFromServer(notebookId: string): Promise<NotePage[]> {
   const { data, error } = await supabase
     .from("notes")
     .select("*")
@@ -292,6 +330,27 @@ export async function savePage(
   expectedUpdatedAt: string | null,
   force = false
 ): Promise<string> {
+  // Без интернета — в очередь на отправку; на экране и в кэше правка видна сразу
+  if (!isOnline()) return saveOffline(page, content, attachments, expectedUpdatedAt);
+  try {
+    const savedAt = await savePageToServer(page, content, attachments, expectedUpdatedAt, force);
+    // Свежая версия уже на сервере — старая офлайн-правка этой страницы больше не нужна
+    if (await pendingPageSave(page.id)) await dropPageSave(page.id);
+    void updateCached<NotePage>(`page:${page.id}`, (old) => old && { ...old, content, attachments, updatedAt: savedAt });
+    return savedAt;
+  } catch (err) {
+    if (err instanceof PageConflictError || !isNetworkError(err)) throw err;
+    return saveOffline(page, content, attachments, expectedUpdatedAt);
+  }
+}
+
+async function savePageToServer(
+  page: { id: string; notebookId: string },
+  content: string,
+  attachments: NoteAttachment[],
+  expectedUpdatedAt: string | null,
+  force: boolean
+): Promise<string> {
   const userId = await currentUserId();
   let query = supabase
     .from("notes")
@@ -303,6 +362,69 @@ export async function savePage(
   if (!data || data.length === 0) throw new PageConflictError();
   await touchNotebook(page.notebookId);
   return data[0].updated_at;
+}
+
+// Офлайн-правка: версия, с которой начали (baseUpdatedAt), сохраняется от первой правки —
+// по ней при синхронизации понятно, менял ли страницу кто-то другой, пока мы были без сети
+async function saveOffline(
+  page: { id: string; notebookId: string },
+  content: string,
+  attachments: NoteAttachment[],
+  expectedUpdatedAt: string | null
+): Promise<string> {
+  const previous = await pendingPageSave(page.id);
+  const savedAt = new Date().toISOString();
+  let title: string | undefined;
+  await updateCached<NotePage>(`page:${page.id}`, (old) => {
+    title = old?.title;
+    return old && { ...old, content, attachments };
+  });
+  await queuePageSave({
+    pageId: page.id,
+    notebookId: page.notebookId,
+    title: previous?.title ?? title,
+    content,
+    attachments,
+    baseUpdatedAt: previous ? previous.baseUpdatedAt : expectedUpdatedAt,
+    savedAt,
+  });
+  // Возвращаем ту же версию, с которой начали: редактор передаст её в следующий раз,
+  // а для синхронизации важна именно она
+  return previous ? (previous.baseUpdatedAt ?? savedAt) : (expectedUpdatedAt ?? savedAt);
+}
+
+let syncing: Promise<number> | null = null;
+
+// Отправить правки, сделанные без интернета. Возвращает, сколько страниц отправлено.
+// Если страницу за это время изменил кто-то другой — его версию не трогаем, а нашу кладём
+// рядом новой страницей «… (офлайн-копия)»
+export function syncPendingSaves(): Promise<number> {
+  if (syncing) return syncing;
+  syncing = (async () => {
+    let sent = 0;
+    if (!isOnline()) return 0;
+    for (const p of await pendingPageSaves()) {
+      try {
+        try {
+          await savePageToServer({ id: p.pageId, notebookId: p.notebookId }, p.content, p.attachments as NoteAttachment[], p.baseUpdatedAt, false);
+        } catch (err) {
+          if (!(err instanceof PageConflictError)) throw err;
+          const pages = await getPages(p.notebookId).catch(() => []);
+          const copy = await createPage(p.notebookId, `${p.title ?? "Страница"} (офлайн-копия)`, pages.length);
+          await savePageToServer({ id: copy.id, notebookId: p.notebookId }, p.content, p.attachments as NoteAttachment[], null, true);
+        }
+        await dropPageSave(p.pageId);
+        sent++;
+      } catch (err) {
+        if (isNetworkError(err)) break; // сеть снова пропала — попробуем в следующий раз
+        // Страницу удалили или к ней больше нет доступа — правку не отправить, убираем из очереди
+        console.warn("Офлайн-правка не отправлена", err);
+        await dropPageSave(p.pageId);
+      }
+    }
+    return sent;
+  })().finally(() => (syncing = null));
+  return syncing;
 }
 
 // Изменения открытой страницы от других участников — сразу, без обновления (Supabase Realtime)
@@ -322,14 +444,16 @@ export function subscribeToPage(pageId: string, onChange: (page: NotePage) => vo
 
 // Только свои модули — открытые мне друзьями отдаёт getSharedFlashcardSetsWithMe
 export async function getFlashcardSets(): Promise<FlashcardSet[]> {
-  const userId = await currentUserId();
-  const { data: sets, error } = await supabase
-    .from("flashcard_sets")
-    .select("*")
-    .eq("owner_id", userId)
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return withCards(sets ?? []);
+  return cached("flashcard-sets", async () => {
+    const userId = await currentUserId();
+    const { data: sets, error } = await supabase
+      .from("flashcard_sets")
+      .select("*")
+      .eq("owner_id", userId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return withCards(sets ?? []);
+  });
 }
 
 // Подтягиваем карточки для списка модулей одним запросом
@@ -384,16 +508,18 @@ export async function unshareFlashcardSet(setId: string, friendUserId: string) {
 }
 
 export async function getSharedFlashcardSetsWithMe(): Promise<SharedFlashcardSet[]> {
-  const userId = await currentUserId();
-  const { data, error } = await supabase
-    .from("flashcard_set_shares")
-    .select("created_at, flashcard_sets(*), owner:public_profiles!flashcard_set_shares_owner_id_fkey(id, username, avatar_url, public_id)")
-    .eq("shared_with", userId)
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  const rows = (data ?? []).filter((r: any) => r.flashcard_sets && r.owner);
-  const sets = await withCards(rows.map((r: any) => r.flashcard_sets));
-  return rows.map((r: any, i: number) => ({ set: sets[i], owner: rowToProfile(r.owner) }));
+  return cached("shared-flashcard-sets", async () => {
+    const userId = await currentUserId();
+    const { data, error } = await supabase
+      .from("flashcard_set_shares")
+      .select("created_at, flashcard_sets(*), owner:public_profiles!flashcard_set_shares_owner_id_fkey(id, username, avatar_url, public_id)")
+      .eq("shared_with", userId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    const rows = (data ?? []).filter((r: any) => r.flashcard_sets && r.owner);
+    const sets = await withCards(rows.map((r: any) => r.flashcard_sets));
+    return rows.map((r: any, i: number) => ({ set: sets[i], owner: rowToProfile(r.owner) }));
+  });
 }
 
 const MODULE_COLORS = ["#FF6B5B", "#8C8FE0", "#6B9080", "#FFC93C", "#5AA9E6"];
@@ -452,14 +578,16 @@ export async function addFlashcard(setId: string, front: string, back: string) {
 
 // Список своих модулей без карточек — для выбора, куда добавить карточку
 export async function getFlashcardSetTitles(): Promise<{ id: string; title: string }[]> {
-  const userId = await currentUserId();
-  const { data, error } = await supabase
-    .from("flashcard_sets")
-    .select("id, title")
-    .eq("owner_id", userId)
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return data ?? [];
+  return cached("flashcard-set-titles", async () => {
+    const userId = await currentUserId();
+    const { data, error } = await supabase
+      .from("flashcard_sets")
+      .select("id, title")
+      .eq("owner_id", userId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  });
 }
 
 // --- Группы ---
@@ -478,18 +606,22 @@ function rowToGroup(g: any): Group {
 
 // Группы, в которых я состою (свои и те, куда вступил) — остальные база не покажет
 export async function getGroups(): Promise<Group[]> {
-  const { data, error } = await supabase
-    .from("groups")
-    .select("*, group_members(count)")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return (data ?? []).map(rowToGroup);
+  return cached("groups", async () => {
+    const { data, error } = await supabase
+      .from("groups")
+      .select("*, group_members(count)")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(rowToGroup);
+  });
 }
 
 export async function getGroup(id: string): Promise<Group | undefined> {
-  const { data, error } = await supabase.from("groups").select("*, group_members(count)").eq("id", id).maybeSingle();
-  if (error) throw error;
-  return data ? rowToGroup(data) : undefined;
+  return cached(`group:${id}`, async () => {
+    const { data, error } = await supabase.from("groups").select("*, group_members(count)").eq("id", id).maybeSingle();
+    if (error) throw error;
+    return data ? rowToGroup(data) : undefined;
+  });
 }
 
 // Код без похожих символов (0/O, 1/I/L), чтобы его было легко продиктовать
@@ -528,15 +660,17 @@ export async function addFriendToGroup(groupId: string, friendUserId: string) {
 }
 
 export async function getGroupMembers(groupId: string): Promise<GroupMember[]> {
-  const { data, error } = await supabase
-    .from("group_members")
-    .select("role, joined_at, public_profiles(id, username, avatar_url, public_id)")
-    .eq("group_id", groupId)
-    .order("joined_at", { ascending: true });
-  if (error) throw error;
-  return (data ?? [])
-    .filter((r: any) => r.public_profiles)
-    .map((r: any) => ({ role: r.role, profile: rowToProfile(r.public_profiles) }));
+  return cached(`group-members:${groupId}`, async () => {
+    const { data, error } = await supabase
+      .from("group_members")
+      .select("role, joined_at, public_profiles(id, username, avatar_url, public_id)")
+      .eq("group_id", groupId)
+      .order("joined_at", { ascending: true });
+    if (error) throw error;
+    return (data ?? [])
+      .filter((r: any) => r.public_profiles)
+      .map((r: any) => ({ role: r.role, profile: rowToProfile(r.public_profiles) }));
+  });
 }
 
 export async function leaveGroup(groupId: string) {
@@ -635,10 +769,12 @@ export function subscribeToGroupMessages(
 // --- Профиль (юзернейм + аватарка) ---
 
 export async function getMyPublicProfile(): Promise<PublicProfile | undefined> {
-  const userId = await currentUserId();
-  const { data, error } = await supabase.from("public_profiles").select("*").eq("id", userId).maybeSingle();
-  if (error) throw error;
-  return data ? rowToProfile(data) : undefined;
+  return cached("my-profile", async () => {
+    const userId = await currentUserId();
+    const { data, error } = await supabase.from("public_profiles").select("*").eq("id", userId).maybeSingle();
+    if (error) throw error;
+    return data ? rowToProfile(data) : undefined;
+  });
 }
 
 function rowToProfile(row: any): PublicProfile {
@@ -804,21 +940,23 @@ export async function removeFriend(friendshipId: string, friendUserId: string) {
 }
 
 export async function getFriends(): Promise<Friend[]> {
-  const userId = await currentUserId();
-  const { data, error } = await supabase
-    .from("friend_requests")
-    .select(
-      "id, from_id, to_id, from_profile:public_profiles!friend_requests_from_id_fkey(id, username, avatar_url, public_id), to_profile:public_profiles!friend_requests_to_id_fkey(id, username, avatar_url, public_id)"
-    )
-    .eq("status", "accepted")
-    .or(`from_id.eq.${userId},to_id.eq.${userId}`);
-  if (error) throw error;
-  return (data ?? [])
-    .map((r: any) => {
-      const otherIsFrom = r.to_id === userId;
-      const p = otherIsFrom ? r.from_profile : r.to_profile;
-      if (!p) return null;
-      return { id: r.id, profile: rowToProfile(p) };
-    })
-    .filter(Boolean) as Friend[];
+  return cached("friends", async () => {
+    const userId = await currentUserId();
+    const { data, error } = await supabase
+      .from("friend_requests")
+      .select(
+        "id, from_id, to_id, from_profile:public_profiles!friend_requests_from_id_fkey(id, username, avatar_url, public_id), to_profile:public_profiles!friend_requests_to_id_fkey(id, username, avatar_url, public_id)"
+      )
+      .eq("status", "accepted")
+      .or(`from_id.eq.${userId},to_id.eq.${userId}`);
+    if (error) throw error;
+    return (data ?? [])
+      .map((r: any) => {
+        const otherIsFrom = r.to_id === userId;
+        const p = otherIsFrom ? r.from_profile : r.to_profile;
+        if (!p) return null;
+        return { id: r.id, profile: rowToProfile(p) };
+      })
+      .filter(Boolean) as Friend[];
+  });
 }

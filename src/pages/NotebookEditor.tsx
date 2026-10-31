@@ -25,6 +25,7 @@ import {
 } from "../lib/store";
 import { uploadCanvas, uploadFile, uploadImage, removeFileIfUnused } from "../lib/upload";
 import { sanitizeNoteHtml } from "../lib/sanitize";
+import { useOnline } from "../lib/offline";
 import { getShareToken, enableShareLink, disableShareLink, notebookLink } from "../lib/links";
 import { exportToPdf } from "../lib/pdf";
 // Рисование тянет за собой html2canvas (~200 КБ) — грузим его, только когда нажали «Рисовать»
@@ -64,6 +65,7 @@ export default function NotebookEditor() {
   const [drawingOpen, setDrawingOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const online = useOnline();
   const [uploading, setUploading] = useState(false);
   const [editingTitle, setEditingTitle] = useState<string | null>(null); // null — не редактируем
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -811,7 +813,7 @@ export default function NotebookEditor() {
         {uploading && "Загружаем файл… "}
         {uploadError && <span className="text-coral">{uploadError} </span>}
         {conflict ? "Не сохранено — выберите версию выше" : saveState === "saving" && "Сохраняем…"}
-        {!readOnly && saveState === "saved" && "Все изменения сохранены"}
+        {!readOnly && saveState === "saved" && (online ? "Все изменения сохранены" : "Сохранено на устройстве — отправится, когда появится интернет")}
         {!readOnly && saveState === "idle" && "Начните писать — сохранится автоматически. Выделите текст, чтобы выделить его цветом."}
       </p>
 

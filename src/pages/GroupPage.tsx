@@ -801,7 +801,7 @@ function GroupNotebooks({ group }: { group: Group }) {
           Пока нет общих тетрадей. Создайте тетрадь по предмету — одногруппники смогут дописывать в неё свои конспекты.
         </p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-7">
           {notebooks.map((nb) => (
             <NotebookCard key={nb.id} notebook={nb} />
           ))}

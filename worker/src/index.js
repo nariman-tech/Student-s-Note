@@ -5,6 +5,8 @@
 //   POST   /upload   — принимает файл от вошедшего пользователя и кладёт его в ЕГО папку {userId}/…
 //   GET    /f/<путь> — отдаёт файл для показа (имена файлов случайные — угадать ссылку нельзя)
 //   DELETE /f/<путь> — удаляет файл, только если он лежит в папке того, кто просит
+//   POST   /account/purge — удаление аккаунта: стирает все файлы из папки пользователя,
+//                     кроме тех, что остаются нужны группам (список keep в теле запроса)
 //
 // Вход в аккаунт проверяем у самого Supabase: отдаём ему токен пользователя и получаем, кто это.
 
@@ -117,6 +119,51 @@ async function handleDelete(request, env, key, cors) {
   return new Response(null, { status: 204, headers: cors });
 }
 
+// Удаление аккаунта: за один вызов — до 1000 файлов (одна страница списка + одно пакетное
+// удаление, укладываемся в лимит подзапросов бесплатного Worker). Приложение вызывает,
+// пока не придёт done: true. В keep — пути файлов, на которые ещё ссылаются тетради групп и чаты
+async function handlePurge(request, env, cors) {
+  const userId = await currentUserId(request, env);
+  if (!userId) return json({ error: "Не авторизованы" }, 401, cors);
+  const body = await request.json().catch(() => ({}));
+  const keep = new Set(Array.isArray(body.keep) ? body.keep.filter((k) => typeof k === "string") : []);
+  const after = typeof body.after === "string" && body.after.startsWith(`${userId}/`) ? body.after : "";
+
+  const client = b2(env);
+  const listUrl = new URL(`${env.B2_ENDPOINT.replace(/\/$/, "")}/${env.B2_BUCKET}`);
+  listUrl.searchParams.set("list-type", "2");
+  listUrl.searchParams.set("prefix", `${userId}/`);
+  listUrl.searchParams.set("max-keys", "1000");
+  if (after) listUrl.searchParams.set("start-after", after);
+  const listRes = await client.fetch(listUrl.toString(), { method: "GET" });
+  if (!listRes.ok) return json({ error: "Не получилось получить список файлов" }, 502, cors);
+  const xml = await listRes.text();
+  const keys = [...xml.matchAll(/<Key>([^<]+)<\/Key>/g)].map((m) => unescapeXml(m[1]));
+  const truncated = /<IsTruncated>true<\/IsTruncated>/.test(xml);
+  const toDelete = keys.filter((k) => k.startsWith(`${userId}/`) && !keep.has(k));
+
+  if (toDelete.length > 0) {
+    const payload =
+      `<?xml version="1.0" encoding="UTF-8"?><Delete><Quiet>true</Quiet>` +
+      toDelete.map((k) => `<Object><Key>${escapeXml(k)}</Key></Object>`).join("") +
+      `</Delete>`;
+    const md5 = await crypto.subtle.digest("MD5", new TextEncoder().encode(payload));
+    const res = await client.fetch(`${env.B2_ENDPOINT.replace(/\/$/, "")}/${env.B2_BUCKET}?delete`, {
+      method: "POST",
+      body: payload,
+      headers: { "Content-Type": "application/xml", "Content-MD5": btoa(String.fromCharCode(...new Uint8Array(md5))) },
+    });
+    if (!res.ok) {
+      console.log("B2 batch delete failed", res.status, await res.text());
+      return json({ error: "Не получилось удалить файлы" }, 502, cors);
+    }
+  }
+  return json({ deleted: toDelete.length, done: !truncated, next: keys[keys.length - 1] ?? null }, 200, cors);
+}
+
+const escapeXml = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const unescapeXml = (s) => s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&");
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -124,6 +171,7 @@ export default {
     try {
       if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
       if (url.pathname === "/upload" && request.method === "POST") return await handleUpload(request, env, cors);
+      if (url.pathname === "/account/purge" && request.method === "POST") return await handlePurge(request, env, cors);
       if (url.pathname.startsWith("/f/")) {
         const key = decodeURIComponent(url.pathname.slice(3));
         if (!KEY_RE.test(key)) return new Response("Не найдено", { status: 404, headers: cors });

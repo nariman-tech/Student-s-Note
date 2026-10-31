@@ -54,11 +54,32 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-paper p-4">
-      <div className="w-full max-w-sm p-8 rounded-card border border-line bg-card">
-        <div className="text-center mb-6">
-          <img src="/icons/icon-192.png" alt="" className="w-14 h-14 mx-auto mb-2 rounded-2xl" />
-          <h1 className="font-display font-800 text-2xl">Lectiva</h1>
+    <div className="min-h-screen flex bg-paper">
+      {/* Слева на компьютере — полка с тетрадями: сразу видно, что это за приложение */}
+      <aside className="hidden lg:flex w-[46%] max-w-[640px] bg-sidebar text-white flex-col justify-between p-12 relative overflow-hidden">
+        <div className="flex items-center gap-2.5">
+          <img src="/icons/icon-192.png" alt="" className="w-9 h-9 rounded-lg" />
+          <span className="font-display font-800 text-xl">Lectiva</span>
+        </div>
+        <div>
+          <p className="font-display font-800 text-[2.75rem] leading-[1.05] tracking-tight max-w-md">
+            Все конспекты семестра на одной полке
+          </p>
+          <p className="text-white/60 mt-4 max-w-sm leading-relaxed">
+            Тетради по предметам, флеш-карты из выделенного текста и общие тетради с группой. Работает и без интернета.
+          </p>
+        </div>
+        <Shelf />
+      </aside>
+
+      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm p-8 rounded-2xl border border-line bg-card shadow-lift">
+        <div className="text-center mb-7">
+          <img src="/icons/icon-192.png" alt="" className="w-14 h-14 mx-auto mb-3 rounded-2xl lg:hidden" />
+          <h1 className="font-display font-800 text-2xl">
+            <span className="lg:hidden">Lectiva</span>
+            <span className="hidden lg:inline">Вход в Lectiva</span>
+          </h1>
           <p className="text-sm text-ink/50 mt-1">Конспекты, флеш-карты и учёба вместе с группой</p>
         </div>
 
@@ -122,7 +143,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={status === "loading"}
-              className="w-full rounded-card border border-line py-2.5 text-sm font-medium hover:border-ink/40 disabled:opacity-50"
+              className="w-full rounded-card bg-ink text-white py-2.5 text-sm font-medium hover:bg-ink/90 disabled:opacity-50"
             >
               {status === "loading" ? "Секунду…" : "Войти"}
             </button>
@@ -158,6 +179,41 @@ export default function Login() {
           </a>
         </p>
       </div>
+      </div>
+    </div>
+  );
+}
+
+// Декоративная полка: корешки тетрадей разной высоты и цвета
+function Shelf() {
+  const books = [
+    { h: 150, c: "#FF6B5B", t: "Матанализ" },
+    { h: 176, c: "#FFC93C", t: "История" },
+    { h: 132, c: "#8C8FE0", t: "Физика" },
+    { h: 164, c: "#6B9080", t: "Биология" },
+    { h: 144, c: "#5AA9E6", t: "English" },
+    { h: 120, c: "#F3F4F8", t: "Право" },
+  ];
+  return (
+    <div aria-hidden>
+      <div className="flex items-end gap-2">
+        {books.map((b, i) => (
+          <div
+            key={b.t}
+            className="w-11 rounded-t-[5px] rounded-b-[2px] relative flex items-end justify-center pb-3"
+            style={{ height: b.h, backgroundColor: b.c, transform: i === 4 ? "rotate(7deg) translateX(4px)" : undefined, transformOrigin: "bottom left" }}
+          >
+            <span className="absolute inset-y-3 left-1.5 border-l border-dashed border-black/15" />
+            <span
+              className="text-[11px] font-semibold text-ink/70 tracking-wide"
+              style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+            >
+              {b.t}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="h-2.5 rounded-sm bg-white/15 mt-0.5 w-[23rem]" />
     </div>
   );
 }

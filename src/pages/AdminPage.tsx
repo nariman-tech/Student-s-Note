@@ -59,18 +59,18 @@ export default function AdminPage() {
   if (allowed === null) return <div className="p-8 text-sm text-ink/40">Загрузка…</div>;
   if (!allowed) {
     return (
-      <div className="p-4 md:p-8 max-w-2xl mx-auto">
-        <h2 className="text-2xl font-display font-800 mb-2">Аналитика</h2>
+      <div className="px-4 py-6 md:px-10 md:py-10 max-w-2xl mx-auto">
+        <h2 className="text-3xl md:text-4xl font-display font-800 mb-2">Аналитика</h2>
         <p className="text-sm text-ink/60">Эта страница доступна только администратору приложения.</p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto">
+    <div className="px-4 py-6 md:px-10 md:py-10 max-w-5xl mx-auto">
       <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
         <div>
-          <h2 className="text-2xl font-display font-800">Аналитика</h2>
+          <h2 className="text-3xl md:text-4xl font-display font-800">Аналитика</h2>
           <p className="text-sm text-ink/50 mt-1">Только числа — содержимое конспектов и сообщений здесь не видно</p>
         </div>
         <div className="flex rounded-card bg-card border border-line p-1" role="radiogroup" aria-label="Период">
