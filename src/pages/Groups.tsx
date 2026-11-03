@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useUnread } from "../lib/unread";
+import { CountBadge } from "../components/Sidebar";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getGroups, addGroup, joinGroupByCode } from "../lib/store";
 import { Group } from "../types";
@@ -14,6 +16,7 @@ function membersLabel(n: number): string {
 export default function Groups() {
   const navigate = useNavigate();
   const [groups, setGroups] = useState<Group[]>([]);
+  const unread = useUnread();
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [modal, setModal] = useState<"create" | "join" | null>(null);
@@ -80,7 +83,14 @@ export default function Groups() {
                   {membersLabel(g.memberCount)}
                 </p>
               </div>
-              <span className="text-sm text-ink/40">Открыть чат →</span>
+              {unread.byGroup[g.id] ? (
+                <span className="flex items-center gap-2 text-sm font-semibold text-coral">
+                  <CountBadge count={unread.byGroup[g.id]} label="Новых сообщений" />
+                  {newMessagesWord(unread.byGroup[g.id])}
+                </span>
+              ) : (
+                <span className="text-sm text-ink/40">Открыть чат →</span>
+              )}
             </Link>
           ))}
         </div>
@@ -240,4 +250,11 @@ export function JoinByLink() {
       )}
     </div>
   );
+}
+
+// 1 новое, 2 новых, 5 новых
+function newMessagesWord(n: number): string {
+  const d = n % 10,
+    dd = n % 100;
+  return d === 1 && dd !== 11 ? "новое" : "новых";
 }

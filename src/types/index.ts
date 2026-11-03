@@ -61,6 +61,8 @@ export interface Group {
   memberCount: number;
   inviteCode: string;
   ownerId: string;
+  pinnedMessageId?: string; // закреплённое сообщение чата
+  pinnedBy?: string; // кто закрепил
 }
 
 export interface GroupMember {

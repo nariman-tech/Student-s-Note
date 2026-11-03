@@ -5,6 +5,7 @@ import { formatPublicId, getIncomingRequestCount, FRIEND_REQUESTS_CHANGED } from
 import { FeedbackModal } from "./Feedback";
 import Icon, { IconName } from "./Icon";
 import { OfflineBadge } from "./OfflineStatus";
+import { useUnread } from "../lib/unread";
 import { isAdmin } from "../lib/analytics";
 
 export const NAV_LINKS: { to: string; label: string; icon: IconName; end?: boolean }[] = [
@@ -49,6 +50,18 @@ export function useIsAdmin(): boolean {
     isAdmin().then(setAdmin);
   }, []);
   return admin;
+}
+
+export function CountBadge({ count, label, className = "" }: { count: number; label: string; className?: string }) {
+  if (count <= 0) return null;
+  return (
+    <span
+      className={`min-w-5 h-5 px-1.5 rounded-full bg-coral text-white text-[11px] font-semibold flex items-center justify-center ${className}`}
+      aria-label={`${label}: ${count}`}
+    >
+      {count > 99 ? "99+" : count}
+    </span>
+  );
 }
 
 export function RequestsBadge({ count, className = "" }: { count: number; className?: string }) {
@@ -107,6 +120,7 @@ function SideLink({ to, end, icon, label, children }: { to: string; end?: boolea
 export default function Sidebar({ profile }: { profile: PublicProfile }) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const pendingRequests = usePendingRequests();
+  const unread = useUnread();
   const admin = useIsAdmin();
 
   return (
@@ -120,6 +134,7 @@ export default function Sidebar({ profile }: { profile: PublicProfile }) {
         {NAV_LINKS.map((link) => (
           <SideLink key={link.to} {...link}>
             {link.to === "/friends" && <RequestsBadge count={pendingRequests} className="ml-auto" />}
+            {link.to === "/groups" && <CountBadge count={unread.total} label="Непрочитанных сообщений" className="ml-auto" />}
           </SideLink>
         ))}
       </nav>
@@ -160,6 +175,7 @@ export default function Sidebar({ profile }: { profile: PublicProfile }) {
 // снизу — вкладки как в обычных приложениях
 export function MobileNav({ profile }: { profile: PublicProfile }) {
   const pendingRequests = usePendingRequests();
+  const unread = useUnread();
 
   return (
     <>
@@ -205,6 +221,9 @@ export function MobileNav({ profile }: { profile: PublicProfile }) {
                 </span>
                 {link.label}
                 {link.to === "/friends" && <RequestsBadge count={pendingRequests} className="absolute top-1 left-1/2 ml-3" />}
+                {link.to === "/groups" && (
+                  <CountBadge count={unread.total} label="Непрочитанных сообщений" className="absolute top-1 left-1/2 ml-3" />
+                )}
               </>
             )}
           </NavLink>

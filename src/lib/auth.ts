@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { clearOfflineData, isOnline } from "./offline";
+import { resetUnread } from "./unread";
 import type { Session } from "@supabase/supabase-js";
 
 // Регистрация по email+паролю. Возвращает true, если сессия появилась сразу
@@ -86,6 +87,7 @@ export async function setNewPassword(password: string) {
 // Заодно стираем офлайн-копии конспектов на этом устройстве
 export async function signOut() {
   await supabase.auth.signOut({ scope: "local" });
+  resetUnread();
   await clearOfflineData();
 }
 
