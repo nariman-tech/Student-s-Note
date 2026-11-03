@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Icon from "../components/Icon";
+import { pendingInviteKind } from "../lib/links";
 import { signInWithPassword, signInWithGoogle, sendPasswordReset, authErrorMessage } from "../lib/auth";
 
 // Вход: новые пользователи регистрируются только через Google (один клик, без фейковых почт и писем).
@@ -12,6 +13,7 @@ export default function Login() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
+  const [invite] = useState(pendingInviteKind);
 
   // Вход через Google не удался — Supabase возвращает на сайт с ошибкой в адресе
   // (?error_description=… или #error_description=…). Показываем её понятным текстом и убираем из адреса,
@@ -83,6 +85,12 @@ export default function Login() {
           </h1>
           <p className="text-sm text-ink/50 mt-1">Конспекты, флеш-карты и учёба вместе с группой</p>
         </div>
+
+        {invite && (
+          <p className="text-sm text-center rounded-card bg-highlight/25 px-3 py-2.5 mb-5">
+            {invite === "group" ? "Вас пригласили в группу." : "Вас пригласили в друзья."} Войдите или создайте аккаунт — приглашение откроется сразу после входа.
+          </p>
+        )}
 
         <button
           onClick={handleGoogle}

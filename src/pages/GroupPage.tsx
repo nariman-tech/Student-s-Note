@@ -849,12 +849,20 @@ function InviteModal({
         <h3 className="font-display font-700 mb-1">Пригласить в группу</h3>
         <p className="text-xs text-ink/50 mb-4">«{group.name}»</p>
 
-        <p className="text-xs font-medium text-ink/40 mb-1.5">Ваши друзья</p>
+        {/* Сначала — мессенджеры: так зовут одногруппников, которых ещё нет в Lectiva */}
+        <p className="text-xs font-medium text-ink/40 mb-1">Отправить приглашение в мессенджер</p>
+        <p className="text-xs text-ink/50 mb-3">
+          Кто откроет ссылку, сразу вступит в группу (после входа в аккаунт). Или продиктуйте код:{" "}
+          <span className="font-mono font-semibold text-ink tracking-wider">{group.inviteCode}</span>
+        </p>
+        <MessengerShare url={groupInviteLink(group.inviteCode)} text={`Вступай в нашу группу «${group.name}» в приложении Lectiva`} />
+
+        <p className="text-xs font-medium text-ink/40 mb-1.5 mt-5 pt-4 border-t border-line">Или добавьте друзей из Lectiva</p>
         {error && <p className="text-xs text-coral mb-2">{error}</p>}
         {loading ? (
           <p className="text-sm text-ink/40 mb-4">Загрузка…</p>
         ) : friends.length === 0 ? (
-          <p className="text-sm text-ink/50 mb-4">Пока нет друзей — добавьте их на странице «Друзья» или отправьте ссылку ниже.</p>
+          <p className="text-sm text-ink/50 mb-4">Пока нет друзей в Lectiva — отправьте ссылку выше.</p>
         ) : (
           <div className="flex flex-col gap-1.5 mb-4">
             {friends.map((f) => {
@@ -876,14 +884,6 @@ function InviteModal({
           </div>
         )}
 
-        <div className="pt-4 border-t border-line">
-          <p className="text-xs font-medium text-ink/40 mb-1">Ссылка-приглашение</p>
-          <p className="text-xs text-ink/50 mb-3">
-            Кто откроет ссылку, сразу вступит в группу (после входа в аккаунт). Или продиктуйте код:{" "}
-            <span className="font-mono font-semibold text-ink tracking-wider">{group.inviteCode}</span>
-          </p>
-          <MessengerShare url={groupInviteLink(group.inviteCode)} text={`Вступай в нашу группу «${group.name}» в приложении Lectiva`} />
-        </div>
 
         <button onClick={onClose} className="w-full text-center text-xs text-ink/50 hover:text-ink mt-4">
           Готово

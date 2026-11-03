@@ -16,6 +16,38 @@ export function isLocalAppUrl(): boolean {
 export const notebookLink = (token: string) => `${publicAppUrl()}/s/n/${token}`;
 export const flashcardSetLink = (token: string) => `${publicAppUrl()}/s/f/${token}`;
 export const groupInviteLink = (code: string) => `${publicAppUrl()}/join/${code}`;
+// Приглашение в друзья: открывший ссылку отправит вам заявку (вы её примете в «Друзьях»)
+export const friendInviteLink = (publicId: number) => `${publicAppUrl()}/add/${publicId}`;
+
+// Ссылку-приглашение (/join/…, /add/…) открыли без входа в аккаунт. После входа через Google
+// браузер возвращается на главную, поэтому запоминаем, куда человек шёл, и открываем это после входа
+const AFTER_LOGIN_KEY = "lectiva-after-login";
+
+export function rememberInviteRoute(path: string) {
+  if (!/^\/(join|add)\//.test(path)) return;
+  try {
+    localStorage.setItem(AFTER_LOGIN_KEY, path);
+  } catch {}
+}
+
+export function takeInviteRoute(): string | null {
+  try {
+    const path = localStorage.getItem(AFTER_LOGIN_KEY);
+    localStorage.removeItem(AFTER_LOGIN_KEY);
+    return path && /^\/(join|add)\/[\w-]+$/.test(path) ? path : null;
+  } catch {
+    return null;
+  }
+}
+
+export function pendingInviteKind(): "group" | "friend" | null {
+  try {
+    const path = localStorage.getItem(AFTER_LOGIN_KEY) ?? "";
+    return path.startsWith("/join/") ? "group" : path.startsWith("/add/") ? "friend" : null;
+  } catch {
+    return null;
+  }
+}
 
 // 24 случайных символа (~143 бита) — ссылку невозможно подобрать перебором
 function generateToken(): string {
