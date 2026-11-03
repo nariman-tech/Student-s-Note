@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Sidebar, { MobileNav } from "./components/Sidebar";
 import Notebooks from "./pages/Notebooks";
 import Login from "./pages/Login";
@@ -13,6 +13,7 @@ const JoinByLink = lazy(() => import("./pages/Groups").then((m) => ({ default: m
 const GroupPage = lazy(() => import("./pages/GroupPage"));
 const Friends = lazy(() => import("./pages/Friends"));
 const People = lazy(() => import("./pages/People"));
+const AddFriendByLink = lazy(() => import("./pages/AddFriendByLink"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
@@ -26,6 +27,7 @@ const screenLoading = <div className="min-h-screen flex items-center justify-cen
 import { getSession, onAuthStateChange, ensureProfile } from "./lib/auth";
 import { getMyPublicProfile, syncPendingSaves } from "./lib/store";
 import { setOfflineUser } from "./lib/offline";
+import { rememberInviteRoute, takeInviteRoute } from "./lib/links";
 import { SyncToast } from "./components/OfflineStatus";
 import { track } from "./lib/analytics";
 import { FeedbackPrompt } from "./components/Feedback";
@@ -41,6 +43,13 @@ function AppShell({ profile, onProfileChange }: { profile: PublicProfile; onProf
     appOpenTracked = true;
     track("app_open");
   }, []);
+
+  // Пришли по ссылке-приглашению до входа в аккаунт — после входа открываем её
+  const navigate = useNavigate();
+  useEffect(() => {
+    const path = takeInviteRoute();
+    if (path && path !== window.location.pathname) navigate(path, { replace: true });
+  }, [navigate]);
 
   // Правки, сделанные без интернета, — отправляем при запуске и как только сеть вернулась
   useEffect(() => {
@@ -67,6 +76,7 @@ function AppShell({ profile, onProfileChange }: { profile: PublicProfile; onProf
           <Route path="/join/:code" element={<JoinByLink />} />
           <Route path="/friends" element={<Friends />} />
           <Route path="/people" element={<People />} />
+          <Route path="/add/:publicId" element={<AddFriendByLink />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/settings" element={<Settings profile={profile} onProfileChange={onProfileChange} />} />
         </Routes>
@@ -136,6 +146,7 @@ export default function App() {
     return <div className="min-h-screen flex items-center justify-center text-sm text-ink/40">Загрузка…</div>;
   }
   if (!session) {
+    rememberInviteRoute(location.pathname);
     return <Login />;
   }
   if (recovering) {

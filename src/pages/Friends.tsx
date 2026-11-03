@@ -20,6 +20,8 @@ import {
   notifyFriendRequestsChanged,
 } from "../lib/store";
 import ConfirmDialog from "../components/ConfirmDialog";
+import MessengerShare from "../components/MessengerShare";
+import { friendInviteLink } from "../lib/links";
 import Icon, { IconName } from "../components/Icon";
 import { Friend, IncomingRequest, Notebook, FlashcardSet, PublicProfile } from "../types";
 
@@ -186,15 +188,26 @@ function MyIdCard({ publicId }: { publicId: number }) {
   }
 
   return (
-    <div className="mb-6 rounded-card border border-line bg-card p-4 flex items-center justify-between">
-      <div>
-        <p className="text-xs text-ink/50">Ваш ID — друзья могут найти вас по нему</p>
-        <p className="font-display font-800 text-lg tracking-wide">{formatPublicId(publicId)}</p>
+    <div className="mb-6 rounded-card border border-line bg-card p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs text-ink/50">Ваш ID — друзья могут найти вас по нему</p>
+          <p className="font-display font-800 text-lg tracking-wide">{formatPublicId(publicId)}</p>
+        </div>
+        <button onClick={handleCopy} className="text-xs rounded-card border border-line px-3 py-1.5 hover:border-ink/40 flex items-center gap-1.5 shrink-0">
+          <Icon name={copied ? "check" : "copy"} size={13} />
+          {copied ? "Скопировано" : "Копировать"}
+        </button>
       </div>
-      <button onClick={handleCopy} className="text-xs rounded-card border border-line px-3 py-1.5 hover:border-ink/40 flex items-center gap-1.5">
-        <Icon name={copied ? "check" : "copy"} size={13} />
-        {copied ? "Скопировано" : "Копировать"}
-      </button>
+      {/* Приглашение через мессенджеры: друг откроет ссылку и пришлёт вам заявку */}
+      <div className="mt-4 pt-4 border-t border-line">
+        <p className="text-sm font-semibold mb-0.5">Пригласить друга через мессенджер</p>
+        <p className="text-xs text-ink/50 mb-3">Друг откроет ссылку, войдёт в Lectiva и пришлёт вам заявку — останется её принять.</p>
+        <MessengerShare
+          url={friendInviteLink(publicId)}
+          text={`Добавь меня в друзья в Lectiva — будем делиться конспектами. Мой ID: ${formatPublicId(publicId)}`}
+        />
+      </div>
     </div>
   );
 }
