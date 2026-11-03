@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Icon from "./Icon";
 import { track } from "../lib/analytics";
 import { getFriends, formatPublicId } from "../lib/store";
 import { Friend } from "../types";
@@ -123,7 +124,13 @@ export default function FriendsShareModal({ title, target, onClose }: { title: s
                     <span className="block text-xs text-ink/40">ID {formatPublicId(f.profile.publicId)}</span>
                   </span>
                   <span className={`text-xs ${shared ? "text-sage font-medium" : "text-ink/40"}`}>
-                    {shared ? "✓ Открыта" : "Открыть"}
+                    {shared ? (
+                      <span className="flex items-center gap-1">
+                        <Icon name="check" size={13} /> Открыта
+                      </span>
+                    ) : (
+                      "Открыть"
+                    )}
                   </span>
                 </button>
               );

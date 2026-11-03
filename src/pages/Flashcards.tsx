@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Icon from "../components/Icon";
 import {
   getFlashcardSets,
   createFlashcardSet,
@@ -217,7 +218,7 @@ function ModuleCard({ set, ownerUsername, onOpen }: { set: FlashcardSet; ownerUs
         aria-label="Поделиться модулем"
         title="Поделиться"
       >
-        🔗
+        <Icon name="link" size={14} />
       </button>
       )}
 
@@ -271,7 +272,7 @@ export function StudySession({
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         {onBack ? (
           <button onClick={onBack} className="text-sm text-ink/50 hover:text-ink flex items-center gap-1">
-            ← Все модули
+            <Icon name="arrowLeft" size={15} /> Все модули
           </button>
         ) : (
           <span />
@@ -282,13 +283,13 @@ export function StudySession({
             onClick={onEdit}
             className="text-sm rounded-card border border-line px-3 py-2 hover:border-ink/40 flex items-center gap-1.5"
           >
-            ✏️ Изменить
+            <Icon name="edit" size={15} /> Изменить
           </button>
           <button
             onClick={() => setShareOpen(true)}
             className="text-sm rounded-card border border-line px-3 py-2 hover:border-ink/40 flex items-center gap-1.5"
           >
-            🔗 Поделиться
+            <Icon name="link" size={15} /> Поделиться
           </button>
           <button
             onClick={onDelete}
@@ -296,7 +297,7 @@ export function StudySession({
             title="Удалить модуль"
             aria-label="Удалить модуль"
           >
-            🗑
+            <Icon name="trash" size={16} />
           </button>
         </div>
         )}
@@ -325,21 +326,23 @@ export function StudySession({
           <div className="flex justify-center gap-3 mt-4">
             <button
               onClick={handleDontKnow}
-              className="px-5 py-2.5 text-sm rounded-card bg-coral/15 text-coral font-medium hover:bg-coral/25"
+              className="px-5 py-2.5 text-sm rounded-card bg-coral/15 text-coral font-medium hover:bg-coral/25 flex items-center gap-1.5"
             >
-              ✕ Не знаю
+              <Icon name="close" size={15} /> Не знаю
             </button>
             <button
               onClick={handleKnow}
-              className="px-5 py-2.5 text-sm rounded-card bg-sage/15 text-sage font-medium hover:bg-sage/25"
+              className="px-5 py-2.5 text-sm rounded-card bg-sage/15 text-sage font-medium hover:bg-sage/25 flex items-center gap-1.5"
             >
-              ✓ Знаю
+              <Icon name="check" size={15} /> Знаю
             </button>
           </div>
         </>
       ) : (
         <div className="text-center py-16">
-          <p className="text-3xl mb-3">🎉</p>
+          <span className="w-14 h-14 rounded-full bg-highlight/40 text-ink flex items-center justify-center mx-auto mb-3">
+            <Icon name="trophy" size={28} />
+          </span>
           <p className="font-display font-700 mb-1">Вы выучили весь модуль!</p>
           <p className="text-sm text-ink/50 mb-5">
             {knownCount} из {set.cards.length} {cardsWord(set.cards.length)} — знаю
@@ -448,7 +451,7 @@ function CreateSetModal({
                 className="text-ink/30 hover:text-coral text-sm mt-2 disabled:opacity-0"
                 aria-label="Удалить карточку"
               >
-                ✕
+                <Icon name="close" size={16} />
               </button>
             </div>
           ))}

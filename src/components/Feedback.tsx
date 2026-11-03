@@ -1,19 +1,20 @@
 import { useEffect, useState } from "react";
 import { sendFeedback, FeedbackCategory } from "../lib/analytics";
+import Icon, { IconName } from "./Icon";
 
 const RATINGS = [
-  { value: 1, emoji: "😞", label: "Плохо" },
-  { value: 2, emoji: "😕", label: "Так себе" },
-  { value: 3, emoji: "😐", label: "Нормально" },
-  { value: 4, emoji: "🙂", label: "Хорошо" },
-  { value: 5, emoji: "😍", label: "Отлично" },
+  { value: 1, label: "Плохо" },
+  { value: 2, label: "Так себе" },
+  { value: 3, label: "Нормально" },
+  { value: 4, label: "Хорошо" },
+  { value: 5, label: "Отлично" },
 ];
 
-const CATEGORIES: { value: FeedbackCategory; label: string }[] = [
-  { value: "like", label: "👍 Нравится" },
-  { value: "bug", label: "🐞 Нашёл ошибку" },
-  { value: "idea", label: "💡 Идея" },
-  { value: "other", label: "💬 Другое" },
+const CATEGORIES: { value: FeedbackCategory; label: string; icon: IconName }[] = [
+  { value: "like", label: "Нравится", icon: "like" },
+  { value: "bug", label: "Нашёл ошибку", icon: "bug" },
+  { value: "idea", label: "Идея", icon: "idea" },
+  { value: "other", label: "Другое", icon: "chat" },
 ];
 
 const PLACEHOLDERS: Record<FeedbackCategory, string> = {
@@ -23,7 +24,7 @@ const PLACEHOLDERS: Record<FeedbackCategory, string> = {
   other: "Напишите, что думаете",
 };
 
-// Окно «Отзыв»: оценка смайликом + тип + текст
+// Окно «Отзыв»: оценка звёздами + тип + текст
 export function FeedbackModal({ initialRating, onClose }: { initialRating?: number; onClose: () => void }) {
   const [rating, setRating] = useState<number | undefined>(initialRating);
   const [category, setCategory] = useState<FeedbackCategory>(initialRating && initialRating <= 2 ? "bug" : "like");
@@ -54,7 +55,9 @@ export function FeedbackModal({ initialRating, onClose }: { initialRating?: numb
       <div className="bg-card rounded-card p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         {sent ? (
           <div className="text-center py-4">
-            <p className="text-3xl mb-2">💛</p>
+            <span className="w-12 h-12 rounded-full bg-highlight/40 text-ink flex items-center justify-center mx-auto mb-3">
+              <Icon name="heart" size={24} filled />
+            </span>
             <h3 className="font-display font-700 mb-1">Спасибо за отзыв!</h3>
             <p className="text-sm text-ink/50 mb-5">Мы читаем каждый — так приложение становится лучше.</p>
             <button onClick={onClose} className="px-4 py-2 text-sm rounded-card bg-ink text-white hover:bg-ink/90">
@@ -66,24 +69,26 @@ export function FeedbackModal({ initialRating, onClose }: { initialRating?: numb
             <h3 className="font-display font-700 mb-1">Как вам Lectiva?</h3>
             <p className="text-xs text-ink/50 mb-4">Оценка и пара слов очень помогут</p>
 
-            <div className="flex justify-between mb-4" role="radiogroup" aria-label="Оценка">
-              {RATINGS.map((r) => (
-                <button
-                  key={r.value}
-                  role="radio"
-                  aria-checked={rating === r.value}
-                  aria-label={r.label}
-                  title={r.label}
-                  onClick={() => setRating(r.value)}
-                  className={`flex flex-col items-center gap-0.5 rounded-card px-2.5 py-2 text-2xl transition-transform ${
-                    rating === r.value ? "bg-highlight/40 scale-110" : "hover:bg-paper"
-                  }`}
-                >
-                  {r.emoji}
-                  <span className="text-[10px] text-ink/50">{r.label}</span>
-                </button>
-              ))}
+            {/* Оценка звёздами: подсвечиваются все до выбранной */}
+            <div className="flex items-center gap-1 mb-1" role="radiogroup" aria-label="Оценка">
+              {RATINGS.map((r) => {
+                const on = rating !== undefined && r.value <= rating;
+                return (
+                  <button
+                    key={r.value}
+                    role="radio"
+                    aria-checked={rating === r.value}
+                    aria-label={r.label}
+                    title={r.label}
+                    onClick={() => setRating(r.value)}
+                    className={`p-1 rounded-card transition-transform hover:scale-110 ${on ? "text-highlight" : "text-ink/20 hover:text-highlight/60"}`}
+                  >
+                    <Icon name="star" size={30} filled={on} />
+                  </button>
+                );
+              })}
             </div>
+            <p className="text-xs text-ink/50 h-4 mb-3">{rating ? RATINGS[rating - 1].label : ""}</p>
 
             <div className="flex flex-wrap gap-1.5 mb-3">
               {CATEGORIES.map((c) => (
@@ -91,10 +96,11 @@ export function FeedbackModal({ initialRating, onClose }: { initialRating?: numb
                   key={c.value}
                   onClick={() => setCategory(c.value)}
                   aria-pressed={category === c.value}
-                  className={`text-xs rounded-full px-3 py-1.5 border ${
+                  className={`text-xs rounded-full px-3 py-1.5 border flex items-center gap-1.5 ${
                     category === c.value ? "bg-ink text-white border-ink" : "border-line hover:border-ink/40"
                   }`}
                 >
+                  <Icon name={c.icon} size={13} />
                   {c.label}
                 </button>
               ))}
@@ -212,16 +218,16 @@ export function FeedbackPrompt() {
       className="fixed z-40 bottom-20 md:bottom-6 right-4 left-4 md:left-auto md:w-80 bg-card border border-line rounded-card shadow-lg p-4 print:hidden"
     >
       <p className="text-sm font-medium mb-3">Нравится Lectiva?</p>
-      <div className="flex justify-between mb-3">
+      <div className="flex gap-1 mb-3 text-ink/20">
         {RATINGS.map((r) => (
           <button
             key={r.value}
             onClick={() => setModalRating(r.value)}
-            className="text-2xl rounded-card px-1.5 py-1 hover:bg-paper hover:scale-110 transition-transform"
+            className="p-1 rounded-card hover:text-highlight hover:scale-110 transition-transform"
             aria-label={r.label}
             title={r.label}
           >
-            {r.emoji}
+            <Icon name="star" size={26} />
           </button>
         ))}
       </div>

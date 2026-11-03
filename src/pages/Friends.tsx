@@ -20,6 +20,7 @@ import {
   notifyFriendRequestsChanged,
 } from "../lib/store";
 import ConfirmDialog from "../components/ConfirmDialog";
+import Icon, { IconName } from "../components/Icon";
 import { Friend, IncomingRequest, Notebook, FlashcardSet, PublicProfile } from "../types";
 
 export default function Friends() {
@@ -126,9 +127,9 @@ export default function Friends() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setPickerFriendId(f.id)}
-                  className="text-xs rounded-card border border-line px-3 py-1.5 hover:border-ink/40"
+                  className="text-xs rounded-card border border-line px-3 py-1.5 hover:border-ink/40 flex items-center gap-1.5"
                 >
-                  🔗 Поделиться
+                  <Icon name="link" size={13} /> Поделиться
                 </button>
                 <button
                   onClick={() => setRemovingFriend(f)}
@@ -136,7 +137,7 @@ export default function Friends() {
                   title="Удалить из друзей"
                   aria-label={`Удалить @${f.profile.username} из друзей`}
                 >
-                  ✕
+                  <Icon name="close" size={14} />
                 </button>
               </div>
             </div>
@@ -190,8 +191,9 @@ function MyIdCard({ publicId }: { publicId: number }) {
         <p className="text-xs text-ink/50">Ваш ID — друзья могут найти вас по нему</p>
         <p className="font-display font-800 text-lg tracking-wide">{formatPublicId(publicId)}</p>
       </div>
-      <button onClick={handleCopy} className="text-xs rounded-card border border-line px-3 py-1.5 hover:border-ink/40">
-        {copied ? "Скопировано ✓" : "Копировать"}
+      <button onClick={handleCopy} className="text-xs rounded-card border border-line px-3 py-1.5 hover:border-ink/40 flex items-center gap-1.5">
+        <Icon name={copied ? "check" : "copy"} size={13} />
+        {copied ? "Скопировано" : "Копировать"}
       </button>
     </div>
   );
@@ -354,7 +356,7 @@ function SharePicker({ friend, onClose }: { friend: PublicProfile; onClose: () =
     }
   }
 
-  function ToggleRow({ itemKey, icon, title, onToggle }: { itemKey: string; icon: string; title: string; onToggle: () => void }) {
+  function ToggleRow({ itemKey, icon, title, onToggle }: { itemKey: string; icon: IconName; title: string; onToggle: () => void }) {
     const shared = sharedKeys.has(itemKey);
     return (
       <button
@@ -364,9 +366,9 @@ function SharePicker({ friend, onClose }: { friend: PublicProfile; onClose: () =
           shared ? "border-sage bg-sage/10" : "border-line hover:border-ink/40"
         }`}
       >
-        <span>{icon}</span>
+        <Icon name={icon} size={16} className="text-ink/50 shrink-0" />
         <span className="flex-1 truncate">{title}</span>
-        <span className={`text-xs ${shared ? "text-sage font-medium" : "text-ink/40"}`}>{shared ? "✓ Открыто" : "Открыть"}</span>
+        <span className={`text-xs ${shared ? "text-sage font-medium" : "text-ink/40"}`}>{shared ? "Открыто" : "Открыть"}</span>
       </button>
     );
   }
@@ -390,7 +392,7 @@ function SharePicker({ friend, onClose }: { friend: PublicProfile; onClose: () =
                     <ToggleRow
                       key={n.id}
                       itemKey={`nb:${n.id}`}
-                      icon={n.coverImageUrl ? "📓" : n.iconEmoji}
+                      icon="notebooks"
                       title={n.title}
                       onToggle={() =>
                         toggle(`nb:${n.id}`, () => shareNotebook(n.id, friend.id), () => unshareNotebook(n.id, friend.id))
@@ -409,7 +411,7 @@ function SharePicker({ friend, onClose }: { friend: PublicProfile; onClose: () =
                     <ToggleRow
                       key={st.id}
                       itemKey={`set:${st.id}`}
-                      icon="🗂️"
+                      icon="cards"
                       title={st.title}
                       onToggle={() =>
                         toggle(`set:${st.id}`, () => shareFlashcardSet(st.id, friend.id), () => unshareFlashcardSet(st.id, friend.id))

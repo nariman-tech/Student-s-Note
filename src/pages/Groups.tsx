@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useUnread } from "../lib/unread";
 import { CountBadge } from "../components/Sidebar";
+import Icon from "../components/Icon";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getGroups, addGroup, joinGroupByCode } from "../lib/store";
 import { Group } from "../types";
@@ -89,7 +90,9 @@ export default function Groups() {
                   {newMessagesWord(unread.byGroup[g.id])}
                 </span>
               ) : (
-                <span className="text-sm text-ink/40">Открыть чат →</span>
+                <span className="text-sm text-ink/40 flex items-center gap-1">
+                  Открыть чат <Icon name="arrowRight" size={14} />
+                </span>
               )}
             </Link>
           ))}
@@ -242,7 +245,7 @@ export function JoinByLink() {
         <>
           <p className="mb-3">{error}</p>
           <Link to="/groups" className="text-sm text-ink/60 hover:text-ink">
-            ← Все группы
+            <Icon name="arrowLeft" size={13} className="inline -mt-0.5 mr-1" />Все группы
           </Link>
         </>
       ) : (

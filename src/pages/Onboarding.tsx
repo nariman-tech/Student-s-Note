@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import Icon from "../components/Icon";
 import { createMyPublicProfile, updateMyGender, cleanUsername, profileErrorMessage } from "../lib/store";
 import { uploadImage } from "../lib/upload";
 import { PublicProfile } from "../types";
@@ -63,7 +64,7 @@ export default function Onboarding({ onDone }: Props) {
           {avatar ? (
             <img src={avatar} alt="Аватарка" className="w-full h-full object-cover" />
           ) : (
-            <span className="text-2xl">🙂</span>
+            <Icon name="camera" size={24} className="text-ink/40" />
           )}
         </button>
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />

@@ -26,6 +26,7 @@ import {
 import { uploadCanvas, uploadFile, uploadImage, removeFileIfUnused } from "../lib/upload";
 import { sanitizeNoteHtml } from "../lib/sanitize";
 import { useOnline } from "../lib/offline";
+import Icon, { iconSvg, upgradeNoteIcons } from "../components/Icon";
 import { getShareToken, enableShareLink, disableShareLink, notebookLink } from "../lib/links";
 import { exportToPdf } from "../lib/pdf";
 // Рисование тянет за собой html2canvas (~200 КБ) — грузим его, только когда нажали «Рисовать»
@@ -169,7 +170,7 @@ export default function NotebookEditor() {
     pageVersion.current = loaded.updatedAt;
     setAttachments(loaded.attachments);
     if (editorRef.current) {
-      editorRef.current.innerHTML = needsSanitize ? sanitizeNoteHtml(loaded.content) : loaded.content;
+      editorRef.current.innerHTML = upgradeNoteIcons(needsSanitize ? sanitizeNoteHtml(loaded.content) : loaded.content);
     }
     if (groupInfo && loaded.updatedBy) {
       getPublicProfile(loaded.updatedBy)
@@ -428,7 +429,7 @@ export default function NotebookEditor() {
 
     const delBtn = document.createElement("button");
     delBtn.type = "button";
-    delBtn.textContent = "✕";
+    delBtn.innerHTML = iconSvg("close", 14);
     delBtn.title = "Удалить картинку";
     delBtn.setAttribute("data-action", "remove-image");
     delBtn.style.cssText =
@@ -451,7 +452,8 @@ export default function NotebookEditor() {
 
     if (mime === "application/pdf") {
       const header = document.createElement("div");
-      header.textContent = "📄 " + name;
+      header.innerHTML = iconSvg("file", 14) + " ";
+      header.appendChild(document.createTextNode(name));
       header.style.cssText =
         "font-size:11px;color:rgba(27,35,64,.5);background:#F7F8F5;padding:6px 36px 6px 10px;border-bottom:1px solid #DCE0E8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
       wrapper.appendChild(header);
@@ -472,8 +474,8 @@ export default function NotebookEditor() {
       card.style.cssText = "display:flex;align-items:center;gap:10px;padding:12px 40px 12px 12px;color:inherit;text-decoration:none;cursor:pointer;";
 
       const icon = document.createElement("span");
-      icon.textContent = mime.startsWith("video") ? "🎬" : "📄";
-      icon.style.cssText = "font-size:20px;flex-shrink:0;";
+      icon.innerHTML = iconSvg(mime.startsWith("video") ? "video" : "file", 20);
+      icon.style.cssText = "flex-shrink:0;display:flex;opacity:.6;";
       card.appendChild(icon);
 
       const label = document.createElement("span");
@@ -486,7 +488,7 @@ export default function NotebookEditor() {
 
     const delBtn = document.createElement("button");
     delBtn.type = "button";
-    delBtn.textContent = "✕";
+    delBtn.innerHTML = iconSvg("close", 14);
     delBtn.title = "Удалить";
     delBtn.setAttribute("data-action", "remove-file");
     delBtn.style.cssText =
@@ -699,9 +701,9 @@ export default function NotebookEditor() {
               <button
                 onClick={() => coverInputRef.current?.click()}
                 disabled={uploading}
-                className="text-xs rounded-card bg-card/90 border border-line px-3 py-1.5 hover:border-ink/40"
+                className="text-xs rounded-card bg-card/90 border border-line px-3 py-1.5 hover:border-ink/40 flex items-center gap-1.5"
               >
-                🖼 Сменить обложку
+                <Icon name="image" size={13} /> Сменить обложку
               </button>
               <button
                 onClick={handleCoverRemove}
@@ -716,7 +718,13 @@ export default function NotebookEditor() {
       <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />
       <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
         <div className="flex items-center gap-3 min-w-0">
-          <span className="text-2xl">{notebook.coverImageUrl ? "📓" : notebook.iconEmoji}</span>
+          <span
+            className="w-9 h-9 rounded-md flex items-center justify-center font-display font-800 text-white shrink-0 overflow-hidden"
+            style={{ backgroundColor: notebook.spineColor }}
+            aria-hidden
+          >
+            {notebook.coverImageUrl ? <img src={notebook.coverImageUrl} alt="" className="w-full h-full object-cover" /> : notebook.iconEmoji}
+          </span>
           {editingTitle !== null ? (
             <input
               autoFocus
@@ -741,7 +749,7 @@ export default function NotebookEditor() {
                   title="Переименовать"
                   aria-label="Переименовать тетрадь"
                 >
-                  ✏️
+                  <Icon name="edit" size={16} />
                 </button>
               )}
             </>
@@ -750,10 +758,10 @@ export default function NotebookEditor() {
         <div className="flex items-center gap-2 shrink-0 print:hidden">
           <button
             onClick={handleExportPdf}
-            className="text-sm rounded-card border border-line px-3 py-2 hover:border-ink/40"
+            className="text-sm rounded-card border border-line px-3 py-2 hover:border-ink/40 flex items-center gap-1.5"
             title="Скачать всю тетрадь в PDF (в окне печати выберите «Сохранить как PDF»)"
           >
-            ⬇️ PDF
+            <Icon name="download" size={15} /> PDF
           </button>
         {!readOnly && (
         <>
@@ -765,7 +773,7 @@ export default function NotebookEditor() {
               title="Добавить обложку"
               aria-label="Добавить обложку"
             >
-              🖼
+              <Icon name="image" size={16} />
             </button>
           )}
           {isOwner && (
@@ -774,7 +782,7 @@ export default function NotebookEditor() {
             onClick={() => setShareOpen(true)}
             className="text-sm rounded-card border border-line px-3 py-2 hover:border-ink/40 flex items-center gap-1.5"
           >
-            🔗 Поделиться
+            <Icon name="link" size={15} /> Поделиться
           </button>
           <button
             onClick={() => setDeleteOpen(true)}
@@ -782,7 +790,7 @@ export default function NotebookEditor() {
             title="Удалить тетрадь"
             aria-label="Удалить тетрадь"
           >
-            🗑
+            <Icon name="trash" size={16} />
           </button>
           </>
           )}
@@ -802,7 +810,7 @@ export default function NotebookEditor() {
         {readOnly && `Только чтение · тетрадь @${readOnlyOwner}`}
         {groupInfo && (
           <>
-            📚 Тетрадь группы{" "}
+            <Icon name="groups" size={13} className="inline -mt-0.5 mr-1" />Тетрадь группы{" "}
             <button onClick={() => navigate(`/groups/${groupInfo.id}?tab=notebooks`)} className="underline hover:text-ink">
               «{groupInfo.name}»
             </button>
@@ -819,8 +827,9 @@ export default function NotebookEditor() {
 
       {conflict && (
         <div role="alert" className="mb-3 rounded-card border border-coral/40 bg-coral/10 p-3 text-sm print:hidden">
-          <p className="mb-2">
-            ⚠️ Эту страницу только что изменил другой участник, а у вас есть несохранённые правки. Чью версию оставить?
+          <p className="mb-2 flex gap-2">
+            <Icon name="alert" size={16} className="text-coral shrink-0 mt-0.5" />
+            Эту страницу только что изменил другой участник, а у вас есть несохранённые правки. Чью версию оставить?
           </p>
           <div className="flex flex-wrap gap-2">
             <button onClick={handleConflictTakeTheirs} className="text-xs rounded-card border border-line bg-card px-3 py-1.5 hover:border-ink/40">
@@ -907,10 +916,10 @@ export default function NotebookEditor() {
           >
             <button
               onMouseDown={handleMakeCard}
-              className="text-xs text-white font-medium px-1.5 py-0.5 rounded hover:bg-white/10 whitespace-nowrap"
+              className="text-xs text-white font-medium px-1.5 py-0.5 rounded hover:bg-white/10 whitespace-nowrap flex items-center gap-1.5"
               title="Сделать флеш-карту из выделенного текста"
             >
-              🗂 В карточку
+              <Icon name="cards" size={13} /> В карточку
             </button>
             {!readOnly && <span className="w-px h-4 bg-white/20" aria-hidden />}
             {!readOnly && HIGHLIGHT_COLORS.map((c) => (
@@ -930,7 +939,7 @@ export default function NotebookEditor() {
       {!readOnly && (
       <div className="flex flex-wrap gap-3 mt-4 print:hidden">
         <label className="cursor-pointer inline-flex items-center gap-2 text-sm rounded-card border border-line px-3 py-2 hover:border-ink/40">
-          📎 Прикрепить файл
+          <Icon name="paperclip" size={15} /> Прикрепить файл
           <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} />
         </label>
         <button
@@ -939,7 +948,7 @@ export default function NotebookEditor() {
             drawingOpen ? "bg-ink text-white" : "bg-highlight text-ink hover:brightness-95"
           }`}
         >
-          ✏️ {drawingOpen ? "Готово" : "Рисовать"}
+          <Icon name={drawingOpen ? "check" : "edit"} size={15} /> {drawingOpen ? "Готово" : "Рисовать"}
         </button>
       </div>
       )}
@@ -954,7 +963,7 @@ export default function NotebookEditor() {
                   <img src={a.url} alt={a.name} className="w-full max-h-[420px] object-contain bg-paper" />
                 ) : (
                   <div className="w-full h-16 flex items-center gap-2 text-xs text-ink/50 p-3">
-                    {a.type === "video" ? "🎬" : "📄"} {a.name}
+                    <Icon name={a.type === "video" ? "video" : "file"} size={18} /> {a.name}
                   </div>
                 )}
                 {!readOnly && (
@@ -964,7 +973,7 @@ export default function NotebookEditor() {
                   title="Удалить"
                   aria-label="Удалить вложение"
                 >
-                  ✕
+                  <Icon name="close" size={14} />
                 </button>
                 )}
               </div>
@@ -983,7 +992,7 @@ export default function NotebookEditor() {
               <div
                 className="text-sm leading-relaxed"
                 // Свой конспект — как есть, чужой (открытый другом) — после очистки, как и в редакторе
-                dangerouslySetInnerHTML={{ __html: needsSanitize ? sanitizeNoteHtml(p.content) : p.content }}
+                dangerouslySetInnerHTML={{ __html: upgradeNoteIcons(needsSanitize ? sanitizeNoteHtml(p.content) : p.content) }}
               />
               {p.attachments
                 .filter((a) => a.type === "image")
@@ -1008,7 +1017,7 @@ export default function NotebookEditor() {
           role="status"
           className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 bg-ink text-white text-sm rounded-card px-4 py-2.5 shadow-lg flex items-center gap-3 print:hidden"
         >
-          ✓ Карточка добавлена в «{cardToast}»
+          <Icon name="check" size={16} className="text-highlight" /> Карточка добавлена в «{cardToast}»
           <button onClick={() => navigate("/flashcards")} className="underline text-white/80 hover:text-white">
             Открыть
           </button>

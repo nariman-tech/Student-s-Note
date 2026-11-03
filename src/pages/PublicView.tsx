@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Icon, { upgradeNoteIcons } from "../components/Icon";
 import { Link, useParams } from "react-router-dom";
 import { getPublicNotebook, getPublicFlashcardSet, PublicNotebook, PublicFlashcardSet } from "../lib/links";
 import { sanitizeNoteHtml } from "../lib/sanitize";
@@ -14,8 +15,9 @@ function Shell({ children, loggedIn }: { children: React.ReactNode; loggedIn: bo
     <div className="min-h-screen bg-paper">
       <header className="border-b border-line bg-card print:hidden">
         <div className="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between">
-          <Link to="/" className="font-display font-800 text-lg">
-            📓 Lectiva
+          <Link to="/" className="font-display font-800 text-lg flex items-center gap-2">
+            <img src="/icons/icon-192.png" alt="" className="w-7 h-7 rounded-md" />
+            Lectiva
           </Link>
           <Link to="/" className="text-sm rounded-card bg-ink text-white px-4 py-2 font-medium hover:bg-ink/90">
             {loggedIn ? "Мои тетради" : "Войти или создать аккаунт"}
@@ -30,7 +32,9 @@ function Shell({ children, loggedIn }: { children: React.ReactNode; loggedIn: bo
 function NotAvailable({ message }: { message: string }) {
   return (
     <div className="text-center py-16">
-      <p className="text-3xl mb-3">🔒</p>
+      <span className="w-14 h-14 rounded-full bg-line/60 text-ink/60 flex items-center justify-center mx-auto mb-3">
+        <Icon name="lock" size={26} />
+      </span>
       <p className="font-display font-700 mb-1">{message}</p>
       <p className="text-sm text-ink/50">Возможно, владелец выключил доступ по ссылке или удалил её.</p>
     </div>
@@ -58,15 +62,17 @@ export function PublicNotebookView({ loggedIn }: { loggedIn: boolean }) {
       )}
       <div className="flex items-center justify-between gap-4 mb-1">
         <div className="flex items-center gap-3 min-w-0">
-          <span className="text-2xl">{notebook.coverImageUrl ? "📓" : notebook.iconEmoji}</span>
+          <span className="w-9 h-9 rounded-md bg-lavender flex items-center justify-center font-display font-800 text-white shrink-0" aria-hidden>
+            {notebook.iconEmoji}
+          </span>
           <h1 className="text-xl font-display font-800 truncate">{notebook.title}</h1>
         </div>
         <button
           onClick={() => exportToPdf(notebook.title)}
-          className="text-sm rounded-card border border-line px-3 py-2 hover:border-ink/40 shrink-0 print:hidden"
+          className="text-sm rounded-card border border-line px-3 py-2 hover:border-ink/40 shrink-0 print:hidden flex items-center gap-1.5"
           title="Скачать конспект в PDF (в окне печати выберите «Сохранить как PDF»)"
         >
-          ⬇️ PDF
+          <Icon name="download" size={15} /> PDF
         </button>
       </div>
       {notebook.ownerUsername && <p className="text-xs text-ink/40 mb-6 print:hidden">Конспект @{notebook.ownerUsername} · только чтение</p>}
@@ -97,7 +103,7 @@ export function PublicNotebookView({ loggedIn }: { loggedIn: boolean }) {
             <div
               className="rounded-card border border-line bg-card p-4 text-sm leading-relaxed min-h-[120px] [&_[data-action]]:hidden print:border-0 print:p-0"
               // Чужой HTML — только после очистки (см. sanitize.ts)
-              dangerouslySetInnerHTML={{ __html: sanitizeNoteHtml(p.content) }}
+              dangerouslySetInnerHTML={{ __html: upgradeNoteIcons(sanitizeNoteHtml(p.content)) }}
             />
             {images.length > 0 && (
               <div className="mt-3 flex flex-col gap-3">

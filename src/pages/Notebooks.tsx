@@ -146,7 +146,7 @@ export default function Notebooks() {
                 <img src={cover} alt="Обложка" className="w-full h-full object-cover" />
               ) : (
                 <>
-                  <span className="text-xl">🖼️</span>
+                  <Icon name="image" size={22} className="text-ink/40" />
                   <span className="text-xs text-ink/50">Своя обложка (необязательно)</span>
                 </>
               )}

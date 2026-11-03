@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Icon from "./Icon";
 import { PageSummary } from "../types";
 
 // Вкладки страниц тетради: «Лекция 1 | Лекция 2 | + Страница». У открытой страницы (для владельца) —
@@ -81,11 +82,11 @@ export default function PageTabs({
 
       {!readOnly && currentId && editing === null && (
         <div className="flex items-center gap-3 mt-1.5 text-xs text-ink/40">
-          <button onClick={() => setEditing({ id: currentId, title: pages[currentIndex]?.title ?? "" })} className="hover:text-ink">
-            ✏️ Переименовать страницу
+          <button onClick={() => setEditing({ id: currentId, title: pages[currentIndex]?.title ?? "" })} className="hover:text-ink flex items-center gap-1.5">
+            <Icon name="edit" size={13} /> Переименовать страницу
           </button>
           <button onClick={() => onMove(currentId, -1)} disabled={currentIndex <= 0} className="hover:text-ink disabled:opacity-30" aria-label="Сдвинуть страницу влево" title="Сдвинуть влево">
-            ←
+            <Icon name="arrowLeft" size={14} />
           </button>
           <button
             onClick={() => onMove(currentId, 1)}
@@ -94,11 +95,11 @@ export default function PageTabs({
             aria-label="Сдвинуть страницу вправо"
             title="Сдвинуть вправо"
           >
-            →
+            <Icon name="arrowRight" size={14} />
           </button>
           {pages.length > 1 && (
-            <button onClick={() => onDelete(currentId)} className="hover:text-coral ml-auto">
-              🗑 Удалить страницу
+            <button onClick={() => onDelete(currentId)} className="hover:text-coral ml-auto flex items-center gap-1.5">
+              <Icon name="trash" size={13} /> Удалить страницу
             </button>
           )}
         </div>

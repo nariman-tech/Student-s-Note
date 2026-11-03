@@ -19,11 +19,12 @@ export default function PrivacyPage() {
     <div className="min-h-screen bg-paper">
       <header className="border-b border-line bg-card">
         <div className="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between">
-          <Link to="/" className="font-display font-800 text-lg">
-            📓 Lectiva
+          <Link to="/" className="font-display font-800 text-lg flex items-center gap-2">
+            <img src="/icons/icon-192.png" alt="" className="w-7 h-7 rounded-md" />
+            Lectiva
           </Link>
           <a href="#english" className="text-sm text-ink/60 hover:text-ink">
-            English ↓
+            English
           </a>
         </div>
       </header>
@@ -101,8 +102,9 @@ export default function PrivacyPage() {
         <Section title="Ваши права и удаление данных">
           <p>
             Вы можете в любой момент удалить свои тетради, страницы, карточки, сообщения и файлы прямо в приложении, а тетради —
-            скачать в PDF. Чтобы удалить аккаунт целиком со всеми данными, напишите через кнопку «💬 Отзыв» в приложении
-            (тип «Другое») — мы удалим аккаунт в течение 30 дней.
+            скачать в PDF. Аккаунт целиком со всеми данными и файлами удаляется сразу в приложении: «Настройки» →
+            «Удалить аккаунт». Группы, которые вы создали, переходят к другому участнику; ваши записи в общих тетрадях
+            групп и сообщения в чатах остаются у группы без вашего имени.
           </p>
         </Section>
 
@@ -159,8 +161,9 @@ export default function PrivacyPage() {
           <Section title="Your rights and deletion">
             <p>
               You can delete your notebooks, pages, flashcards, messages and files in the app at any time, and export notebooks to
-              PDF. To delete your whole account and all its data, send a request via the «💬 Отзыв» (Feedback) button in the app —
-              we will delete it within 30 days.
+              PDF. You can delete your whole account with all its data and files right in the app: «Настройки» (Settings) →
+              «Удалить аккаунт» (Delete account). Groups you created pass to another member; your entries in shared group
+              notebooks and your chat messages stay with the group without your name.
             </p>
           </Section>
           <Section title="Children">
