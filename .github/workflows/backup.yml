@@ -51,6 +51,16 @@ jobs:
             exit 1
           fi
 
+      - name: Очистка секретов от лишних пробелов
+        # При копировании к ключам часто прилипают пробел или перенос строки — из-за них
+        # Backblaze отвечает «Invalid header value». Убираем их, сами значения не печатаем
+        run: |
+          for v in AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY B2_BUCKET; do
+            clean="$(printf '%s' "${!v}" | tr -d '[:space:]')"
+            echo "::add-mask::$clean"
+            echo "$v=$clean" >> "$GITHUB_ENV"
+          done
+
       - name: Проверка строки подключения
         run: |
           # Сам секрет не печатаем — только что с ним не так
