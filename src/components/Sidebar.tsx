@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { PublicProfile } from "../types";
 import { formatPublicId, getIncomingRequestCount, FRIEND_REQUESTS_CHANGED } from "../lib/store";
-import { FeedbackModal } from "./Feedback";
 import Icon, { IconName } from "./Icon";
 import { OfflineBadge } from "./OfflineStatus";
 import { useUnread } from "../lib/unread";
@@ -118,7 +117,6 @@ function SideLink({ to, end, icon, label, children }: { to: string; end?: boolea
 // Боковая панель — на компьютере и планшете. На телефоне вместо неё MobileNav (верхняя
 // полоса + нижнее меню с вкладками), см. ниже
 export default function Sidebar({ profile }: { profile: PublicProfile }) {
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const pendingRequests = usePendingRequests();
   const unread = useUnread();
   const admin = useIsAdmin();
@@ -142,13 +140,6 @@ export default function Sidebar({ profile }: { profile: PublicProfile }) {
       <div className="mt-auto flex flex-col gap-1">
         <OfflineBadge />
         {admin && <SideLink to="/admin" icon="chart" label="Аналитика" />}
-        <button
-          onClick={() => setFeedbackOpen(true)}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-card text-sm font-medium text-white/55 hover:text-white hover:bg-white/[0.04]"
-        >
-          <Icon name="message" size={19} />
-          Отзыв
-        </button>
         <SideLink to="/settings" icon="settings" label="Настройки" />
       </div>
 
@@ -166,7 +157,6 @@ export default function Sidebar({ profile }: { profile: PublicProfile }) {
         </div>
       </NavLink>
 
-      {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
     </aside>
   );
 }

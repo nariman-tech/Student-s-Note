@@ -137,14 +137,14 @@ export function FeedbackModal({ initialRating, onClose }: { initialRating?: numb
 }
 
 // --- Мягкий вопрос «Нравится Lectiva?» ---
-// Появляется, когда человек пользовался приложением хотя бы 3 разных дня, и только если он ещё
+// Появляется, когда человек пользовался приложением хотя бы 2 разных дня, и только если он ещё
 // не оставлял отзыв и не нажимал «Позже» за последние 30 дней. Это удобство на одном устройстве —
 // поэтому localStorage (если он недоступен, вопрос просто не показывается).
 
 const DAYS_KEY = "tetrad.feedback.activeDays";
 const SNOOZE_KEY = "tetrad.feedback.snoozedUntil";
 const GIVEN_KEY = "tetrad.feedback.given";
-const MIN_DAYS = 3;
+const MIN_DAYS = 2;
 const SNOOZE_MS = 30 * 24 * 60 * 60 * 1000;
 
 function safeGet(key: string): string | null {
