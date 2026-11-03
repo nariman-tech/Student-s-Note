@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useState } from "react";
+import Icon from "./Icon";
 import { trackSearch } from "../lib/analytics";
 import { useNavigate } from "react-router-dom";
 import { searchNotebooks, currentUserId } from "../lib/store";
@@ -105,7 +106,7 @@ export default function SearchBar() {
                   <span className="font-medium truncate">{r.title}</span>
                   {me && r.ownerId !== me && <span className="text-[11px] text-lavender shrink-0">от друга</span>}
                 </span>
-                {r.pageTitle && <span className="block text-[11px] text-ink/40 mt-0.5 truncate">📄 {r.pageTitle}</span>}
+                {r.pageTitle && <span className="flex items-center gap-1 text-[11px] text-ink/40 mt-0.5 truncate"><Icon name="file" size={11} />{r.pageTitle}</span>}
                 {r.snippet && (
                   <span className="block text-xs text-ink/60 mt-0.5 line-clamp-2">
                     <Highlighted text={r.snippet} />

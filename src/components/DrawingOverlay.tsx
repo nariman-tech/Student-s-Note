@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import Icon from "./Icon";
 import html2canvas from "html2canvas";
 
 interface Props {
@@ -142,14 +143,18 @@ export default function DrawingOverlay({ targetRef, onAttach, onClose }: Props) 
           <button
             onClick={() => setTool("pencil")}
             className={`px-1.5 py-1 rounded-card text-[11px] text-white ${tool === "pencil" ? "bg-white/20 font-medium" : "opacity-60"}`}
+            aria-label="Карандаш"
+            title="Карандаш"
           >
-            ✏️
+            <Icon name="edit" size={15} />
           </button>
           <button
             onClick={() => setTool("eraser")}
             className={`px-1.5 py-1 rounded-card text-[11px] text-white ${tool === "eraser" ? "bg-white/20 font-medium" : "opacity-60"}`}
+            aria-label="Ластик"
+            title="Ластик"
           >
-            🧽
+            <Icon name="eraser" size={15} />
           </button>
         </div>
 
@@ -176,14 +181,14 @@ export default function DrawingOverlay({ targetRef, onAttach, onClose }: Props) 
           className="w-12"
         />
 
-        <button onClick={handleClear} className="text-[11px] text-white/70 hover:text-white px-1" title="Очистить">
-          🗑️
+        <button onClick={handleClear} className="text-[11px] text-white/70 hover:text-white px-1" title="Очистить" aria-label="Очистить">
+          <Icon name="trash" size={15} />
         </button>
-        <button onClick={handleScreenshot} className="text-[11px] rounded-card bg-highlight text-ink font-medium px-2 py-1" title="Сделать снимок и прикрепить">
-          📸
+        <button onClick={handleScreenshot} className="text-[11px] rounded-card bg-highlight text-ink font-medium px-2 py-1" title="Сделать снимок и прикрепить" aria-label="Сделать снимок и прикрепить">
+          <Icon name="camera" size={15} />
         </button>
-        <button onClick={onClose} className="text-[11px] text-white/70 hover:text-white px-1" title="Закрыть рисование">
-          ✕
+        <button onClick={onClose} className="text-[11px] text-white/70 hover:text-white px-1" title="Закрыть рисование" aria-label="Закрыть рисование">
+          <Icon name="close" size={15} />
         </button>
       </div>
 

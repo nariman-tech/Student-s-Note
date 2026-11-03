@@ -273,7 +273,7 @@ export default function GroupPage() {
       <div className="p-8">
         <p className="mb-3">Группа не найдена — возможно, её удалили или вас исключили.</p>
         <Link to="/groups" className="text-sm text-ink/60 hover:text-ink">
-          ← Все группы
+          <Icon name="arrowLeft" size={13} className="inline -mt-0.5 mr-1" />Все группы
         </Link>
       </div>
     );
@@ -290,7 +290,7 @@ export default function GroupPage() {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-3 md:mb-4">
         <div className="min-w-0">
           <Link to="/groups" className="text-xs text-ink/50 hover:text-ink">
-            ← Все группы
+            <Icon name="arrowLeft" size={13} className="inline -mt-0.5 mr-1" />Все группы
           </Link>
           <h2 className="text-xl font-display font-800 truncate">{group.name}</h2>
           <p className="text-xs text-ink/50">
@@ -303,31 +303,32 @@ export default function GroupPage() {
         <div className="flex flex-wrap items-center gap-2 shrink-0">
           <button
             onClick={() => setInviteOpen(true)}
-            className="text-xs rounded-card bg-ink text-white px-3 py-2 font-medium hover:bg-ink/90"
+            className="text-xs rounded-card bg-ink text-white px-3 py-2 font-medium hover:bg-ink/90 flex items-center gap-1.5"
           >
-            👥 Пригласить
+            <Icon name="userPlus" size={14} /> Пригласить
           </button>
           <button
             onClick={handleCopyCode}
-            className="text-xs rounded-card border border-line px-3 py-2 hover:border-ink/40"
+            className="text-xs rounded-card border border-line px-3 py-2 hover:border-ink/40 flex items-center gap-1.5"
             title="Код для вступления — отправьте его одногруппникам"
           >
-            Код: <span className="font-mono font-semibold tracking-wider">{group.inviteCode}</span>{" "}
-            {codeCopied ? "✓" : "📋"}
+            Код: <span className="font-mono font-semibold tracking-wider">{group.inviteCode}</span>
+            <Icon name={codeCopied ? "check" : "copy"} size={13} className={codeCopied ? "text-sage" : "text-ink/50"} />
           </button>
           <button
             onClick={() => setConfirm(isOwner ? "delete" : "leave")}
-            className="text-xs rounded-card border border-line px-3 py-2 hover:border-coral hover:text-coral"
+            className="text-xs rounded-card border border-line px-3 py-2 hover:border-coral hover:text-coral flex items-center gap-1.5"
           >
-            {isOwner ? "🗑 Удалить группу" : "Выйти"}
+            <Icon name={isOwner ? "trash" : "logout"} size={13} />
+            {isOwner ? "Удалить группу" : "Выйти"}
           </button>
         </div>
       </div>
 
       <div className="flex gap-1 mb-2" role="tablist" aria-label="Разделы группы">
         {[
-          { key: "chat", label: "💬 Чат" },
-          { key: "notebooks", label: "📚 Тетради группы" },
+          { key: "chat", label: "Чат", icon: "chat" as const },
+          { key: "notebooks", label: "Тетради группы", icon: "notebooks" as const },
         ].map((t) => (
           <button
             key={t.key}
@@ -337,8 +338,9 @@ export default function GroupPage() {
               if (t.key === "chat") stickToBottom.current = true;
               setSearchParams(t.key === "chat" ? {} : { tab: t.key }, { replace: true });
             }}
-            className={`text-sm px-3 py-1.5 rounded-card ${tab === t.key ? "bg-ink text-white font-medium" : "text-ink/60 hover:text-ink hover:bg-card"}`}
+            className={`text-sm px-3 py-1.5 rounded-card flex items-center gap-1.5 ${tab === t.key ? "bg-ink text-white font-medium" : "text-ink/60 hover:text-ink hover:bg-card"}`}
           >
+            <Icon name={t.icon} size={15} />
             {t.label}
           </button>
         ))}
@@ -395,7 +397,7 @@ export default function GroupPage() {
         )}
         {messages.length === 0 ? (
           <div className="h-full flex items-center justify-center text-sm text-ink/40 text-center">
-            Здесь пока пусто. Напишите первое сообщение или отправьте фото доски 📸
+            Здесь пока пусто. Напишите первое сообщение или отправьте фото доски
           </div>
         ) : (
           messages.map((m, i) => {
@@ -576,7 +578,7 @@ function MessageRow({
                 rel="noopener noreferrer"
                 className={`flex items-center gap-2 rounded-card px-2.5 py-2 mb-1 ${mine ? "bg-white/10" : "bg-card border border-line"}`}
               >
-                <span className="text-lg">📄</span>
+                <Icon name="file" size={20} className="shrink-0 opacity-70" />
                 <span className="min-w-0">
                   <span className="block truncate max-w-[220px]">{att.name}</span>
                   <span className={`block text-[11px] ${mine ? "text-white/60" : "text-ink/40"}`}>{formatFileSize(att.size)}</span>
@@ -606,7 +608,7 @@ function MessageRow({
               title="Удалить сообщение"
               aria-label="Удалить сообщение"
             >
-              ✕
+              <Icon name="close" size={14} />
             </button>
           )}
         </div>
@@ -663,14 +665,14 @@ function Composer({ groupId, onSent }: { groupId: string; onSent: (m: GroupMessa
           {preview ? (
             <img src={preview} alt="" className="w-12 h-12 rounded-card object-cover" />
           ) : (
-            <span className="w-12 h-12 rounded-card bg-paper flex items-center justify-center text-xl">📄</span>
+            <span className="w-12 h-12 rounded-card bg-paper flex items-center justify-center text-ink/50"><Icon name="file" size={22} /></span>
           )}
           <span className="flex-1 min-w-0">
             <span className="block text-sm truncate">{file.name}</span>
             <span className="block text-xs text-ink/40">{formatFileSize(file.size)}</span>
           </span>
           <button onClick={() => pickFile(null)} disabled={sending} className="text-ink/40 hover:text-coral px-2" aria-label="Убрать файл">
-            ✕
+            <Icon name="close" size={16} />
           </button>
         </div>
       )}
@@ -683,7 +685,7 @@ function Composer({ groupId, onSent }: { groupId: string; onSent: (m: GroupMessa
           title="Прикрепить фото или файл"
           aria-label="Прикрепить фото или файл"
         >
-          📎
+          <Icon name="paperclip" size={18} className="text-ink/60" />
         </button>
         <input
           ref={fileInputRef}
@@ -775,7 +777,7 @@ function MembersModal({
                   title="Исключить из группы"
                   aria-label={`Исключить @${m.profile.username}`}
                 >
-                  ✕
+                  <Icon name="close" size={14} />
                 </button>
               )}
             </div>
@@ -866,7 +868,7 @@ function InviteModal({
                     disabled={inGroup || busyId === f.profile.id}
                     className="text-xs rounded-card bg-ink text-white px-2.5 py-1 hover:bg-ink/90 disabled:bg-sage/15 disabled:text-sage"
                   >
-                    {inGroup ? "✓ В группе" : busyId === f.profile.id ? "…" : "Добавить"}
+                    {inGroup ? "В группе" : busyId === f.profile.id ? "…" : "Добавить"}
                   </button>
                 </div>
               );

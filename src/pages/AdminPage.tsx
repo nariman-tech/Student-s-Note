@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import Icon, { IconName } from "../components/Icon";
 import {
   getAdminStats,
   getAllFeedback,
@@ -26,8 +27,8 @@ const EVENT_LABELS: Record<TrackedEvent, string> = {
   feedback_sent: "Отправили отзыв",
 };
 
-const RATING_EMOJI: Record<number, string> = { 1: "😞", 2: "😕", 3: "😐", 4: "🙂", 5: "😍" };
-const CATEGORY_LABELS: Record<string, string> = { like: "👍 Нравится", bug: "🐞 Ошибка", idea: "💡 Идея", other: "💬 Другое" };
+const CATEGORY_LABELS: Record<string, string> = { like: "Нравится", bug: "Ошибка", idea: "Идея", other: "Другое" };
+const CATEGORY_ICONS: Record<string, IconName> = { like: "like", bug: "bug", idea: "idea", other: "chat" };
 
 function formatDay(iso: string, withYear = false) {
   return new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "short", year: withYear ? "numeric" : undefined });
@@ -323,16 +324,25 @@ function FeedbackList({
           {shown.map((f) => (
             <div key={f.id} className={`rounded-card border border-line bg-card p-4 ${f.status === "done" ? "opacity-60" : ""}`}>
               <div className="flex flex-wrap items-center gap-2 text-xs text-ink/50 mb-1">
-                {f.rating && <span className="text-lg leading-none">{RATING_EMOJI[f.rating]}</span>}
-                <span className="text-ink/70">{CATEGORY_LABELS[f.category]}</span>
+                {f.rating && (
+                  <span className="flex items-center text-highlight" aria-label={`Оценка ${f.rating} из 5`}>
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <Icon key={n} name="star" size={13} filled={n <= f.rating!} className={n <= f.rating! ? "" : "text-ink/15"} />
+                    ))}
+                  </span>
+                )}
+                <span className="text-ink/70 flex items-center gap-1">
+                  <Icon name={CATEGORY_ICONS[f.category] ?? "chat"} size={13} />
+                  {CATEGORY_LABELS[f.category]}
+                </span>
                 <span>· {f.username ? `@${f.username}` : "удалённый пользователь"}</span>
                 <span>· {formatDay(f.createdAt, true)}</span>
                 {f.page && <span>· страница {f.page}</span>}
                 <button onClick={() => onToggle(f)} className="ml-auto underline hover:text-ink">
-                  {f.status === "new" ? "✓ Разобрано" : "Вернуть в новые"}
+                  {f.status === "new" ? "Разобрано" : "Вернуть в новые"}
                 </button>
                 <button onClick={() => onDelete(f)} className="hover:text-coral" aria-label="Удалить отзыв" title="Удалить (спам)">
-                  🗑
+                  <Icon name="trash" size={14} />
                 </button>
               </div>
               {f.message && <p className="text-sm whitespace-pre-wrap break-words">{f.message}</p>}

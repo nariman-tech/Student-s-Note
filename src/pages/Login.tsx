@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Icon from "../components/Icon";
 import { signInWithPassword, signInWithGoogle, sendPasswordReset, authErrorMessage } from "../lib/auth";
 
 // Вход: новые пользователи регистрируются только через Google (один клик, без фейковых почт и писем).
@@ -157,7 +158,7 @@ export default function Login() {
                 }}
                 className="text-xs text-ink/50 hover:text-ink"
               >
-                ← Назад
+                <Icon name="arrowLeft" size={12} className="inline -mt-0.5 mr-1" />Назад
               </button>
               <button
                 type="button"
@@ -245,7 +246,7 @@ function ForgotPassword({ initialEmail, onBack }: { initialEmail: string; onBack
           Откройте ссылку — приложение попросит придумать новый пароль.
         </p>
         <button onClick={onBack} className="text-xs text-ink/60 hover:text-ink mt-3">
-          ← Вернуться ко входу
+          <Icon name="arrowLeft" size={12} className="inline -mt-0.5 mr-1" />Вернуться ко входу
         </button>
       </div>
     );
@@ -272,7 +273,7 @@ function ForgotPassword({ initialEmail, onBack }: { initialEmail: string; onBack
       </button>
       {error && <p className="text-xs text-coral mt-2">{error}</p>}
       <button type="button" onClick={onBack} className="block mx-auto text-xs text-ink/50 hover:text-ink mt-3">
-        ← Вернуться ко входу
+        <Icon name="arrowLeft" size={12} className="inline -mt-0.5 mr-1" />Вернуться ко входу
       </button>
     </form>
   );

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { updateMyPublicProfile, cleanUsername, profileErrorMessage, formatPublicId } from "../lib/store";
 import { uploadImage } from "../lib/upload";
 import { PublicProfile } from "../types";
+import Icon from "./Icon";
 
 // Настройки профиля: аватарка и юзернейм. ID показываем, но менять его нельзя.
 export default function ProfileModal({
@@ -90,8 +91,8 @@ export default function ProfileModal({
             )}
           </button>
           <div className="flex flex-col items-start gap-1.5">
-            <button onClick={() => fileInputRef.current?.click()} className="text-sm text-ink/70 hover:text-ink">
-              🖼 Сменить фото
+            <button onClick={() => fileInputRef.current?.click()} className="text-sm text-ink/70 hover:text-ink flex items-center gap-1.5">
+              <Icon name="image" size={15} /> Сменить фото
             </button>
             {avatarPreview && (
               <button onClick={handleAvatarRemove} className="text-xs text-ink/40 hover:text-coral">
