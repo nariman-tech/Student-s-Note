@@ -871,6 +871,68 @@ export async function searchUsers(query: string): Promise<PublicProfile[]> {
   return (data ?? []).map(rowToProfile);
 }
 
+// --- Люди (каталог всех пользователей) ---
+
+export const PEOPLE_PAGE = 30;
+
+// Список пользователей Lectiva для страницы «Люди»: новые сверху, без меня самого.
+// query — ник (часть ника) или ID из 8 цифр. Видны только публичные данные: ник, аватарка, ID —
+// почта лежит в приватной таблице profiles, её отсюда не получить
+export async function listPeople(query: string, offset = 0): Promise<{ people: PublicProfile[]; total: number | null }> {
+  const load = async () => {
+    const userId = await currentUserId();
+    const digits = query.replace(/^\s*(id|#)\s*:?\s*/i, "").replace(/[\s-]/g, "");
+    let request = supabase
+      .from("public_profiles")
+      .select("*", { count: "exact" })
+      .neq("id", userId)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + PEOPLE_PAGE - 1);
+    if (/^\d{8}$/.test(digits)) {
+      request = request.eq("public_id", Number(digits));
+    } else {
+      const safe = query.trim().replace(/^@/, "").toLowerCase().replace(/[^a-z0-9_]/g, "");
+      if (query.trim() && !safe) return { people: [], total: 0 }; // ники только латиницей — кириллицей никого не найти
+      if (safe) request = request.ilike("username", `%${safe}%`);
+    }
+    const { data, error, count } = await request;
+    if (error) throw error;
+    return { people: (data ?? []).map(rowToProfile), total: count ?? null };
+  };
+  // Без интернета показываем последнюю сохранённую первую страницу полного списка
+  return !query.trim() && offset === 0 ? cached("people", load) : load();
+}
+
+export type Relation =
+  | { kind: "friend"; requestId: string }
+  | { kind: "outgoing"; requestId: string } // я отправил заявку, ждём ответа
+  | { kind: "incoming"; requestId: string }; // мне прислали заявку
+
+// Мои связи со всеми людьми одним запросом: кто друг, кому я отправил заявку, кто прислал мне
+export async function getMyRelations(): Promise<Map<string, Relation>> {
+  const userId = await currentUserId();
+  const { data, error } = await supabase
+    .from("friend_requests")
+    .select("id, from_id, to_id, status")
+    .or(`from_id.eq.${userId},to_id.eq.${userId}`);
+  if (error) throw error;
+  const map = new Map<string, Relation>();
+  for (const r of data ?? []) {
+    const other = r.from_id === userId ? r.to_id : r.from_id;
+    if (r.status === "accepted") map.set(other, { kind: "friend", requestId: r.id });
+    else if (!map.has(other)) map.set(other, { kind: r.from_id === userId ? "outgoing" : "incoming", requestId: r.id });
+  }
+  return map;
+}
+
+// Новая заявка — вернуть её id, чтобы её можно было сразу отменить
+export async function sendFriendRequestReturningId(toId: string): Promise<string> {
+  const fromId = await currentUserId();
+  const { data, error } = await supabase.from("friend_requests").insert({ from_id: fromId, to_id: toId }).select("id").single();
+  if (error) throw error;
+  return data.id;
+}
+
 export async function sendFriendRequest(toId: string) {
   const fromId = await currentUserId();
   const { error } = await supabase.from("friend_requests").insert({ from_id: fromId, to_id: toId });
