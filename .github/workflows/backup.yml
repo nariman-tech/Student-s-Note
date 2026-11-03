@@ -51,6 +51,42 @@ jobs:
             exit 1
           fi
 
+      - name: Очистка секретов от лишних пробелов
+        # При копировании к ключам часто прилипают пробел или перенос строки — из-за них
+        # Backblaze отвечает «Invalid header value». Убираем их, сами значения не печатаем
+        run: |
+          for v in AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY B2_BUCKET; do
+            clean="$(printf '%s' "${!v}" | tr -d '[:space:]')"
+            echo "::add-mask::$clean"
+            echo "$v=$clean" >> "$GITHUB_ENV"
+          done
+
+      - name: Проверка строки подключения
+        run: |
+          # Сам секрет не печатаем — только что с ним не так
+          url="$(printf '%s' "$SUPABASE_DB_URL" | tr -d '[:space:]')"
+          problem=""
+          case "$url" in
+            postgresql://*|postgres://*) ;;
+            *) problem="строка должна начинаться с postgresql://" ;;
+          esac
+          if [ -z "$problem" ] && printf '%s' "$url" | grep -q 'YOUR-PASSWORD'; then
+            problem="вместо [YOUR-PASSWORD] нужно вставить сам пароль базы (без квадратных скобок)"
+          elif [ -z "$problem" ] && printf '%s' "$url" | grep -qE '[][]'; then
+            problem="в строке остались квадратные скобки — уберите их вокруг пароля"
+          elif [ -z "$problem" ] && [ "$(printf '%s' "$url" | tr -cd '@' | wc -c)" -ne 1 ]; then
+            problem="в пароле есть символ @ (или он вставлен дважды) — задайте пароль только из букв и цифр"
+          elif [ -z "$problem" ] && ! printf '%s' "$url" | grep -qE '^postgres(ql)?://[^:/@]+:[^@/?#]+@[^:/@]+:[0-9]+/[A-Za-z0-9_]+$'; then
+            problem="строка не похожа на postgresql://пользователь:пароль@адрес:5432/postgres — в пароле есть символы вроде / ? # : , задайте пароль только из букв и цифр"
+          fi
+          if [ -n "$problem" ]; then
+            echo "::error::Секрет SUPABASE_DB_URL: $problem"
+            exit 1
+          fi
+          echo "::add-mask::$url"
+          echo "SUPABASE_DB_URL=$url" >> "$GITHUB_ENV"
+          echo "Строка подключения выглядит правильно"
+
       - uses: supabase/setup-cli@v1
         with:
           version: latest
@@ -59,9 +95,9 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dump
-          supabase db dump --db-url "$SUPABASE_DB_URL" -f dump/roles.sql --role-only
-          supabase db dump --db-url "$SUPABASE_DB_URL" -f dump/schema.sql
-          supabase db dump --db-url "$SUPABASE_DB_URL" -f dump/data.sql --use-copy --data-only \
+          supabase db dump --remote="$SUPABASE_DB_URL" -f dump/roles.sql --role-only
+          supabase db dump --remote="$SUPABASE_DB_URL" -f dump/schema.sql
+          supabase db dump --remote="$SUPABASE_DB_URL" -f dump/data.sql --use-copy --data-only \
             -x "storage.buckets_vectors" -x "storage.vector_indexes"
           ls -la dump
           # Пустой файл данных — значит, что-то пошло не так
