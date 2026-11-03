@@ -1,0 +1,96 @@
+# Ежедневный бэкап базы Supabase в закрытый бакет Backblaze B2.
+#
+# Бэкап шифруется паролем (BACKUP_PASSPHRASE) ещё здесь, до отправки: в нём почты пользователей
+# и все конспекты. Без пароля файл не открыть — храните пароль отдельно (например, в менеджере паролей).
+# Хранятся последние 30 дней, старые удаляются сами.
+#
+# Нужные секреты (GitHub → Settings → Secrets and variables → Actions → New repository secret):
+#   SUPABASE_DB_URL     — строка подключения «Session pooler» из Supabase (Connect → Session pooler),
+#                         с вашим паролем от базы вместо [YOUR-PASSWORD]
+#   B2_BACKUP_KEY_ID    — keyID ключа Backblaze с доступом только к бакету бэкапов
+#   B2_BACKUP_APP_KEY   — applicationKey того же ключа
+#   B2_BACKUP_BUCKET    — имя закрытого (Private) бакета для бэкапов
+#   BACKUP_PASSPHRASE   — длинный пароль для шифрования бэкапов
+# Как восстановить — docs/BACKUP.md.
+name: Database backup
+
+on:
+  schedule:
+    - cron: "41 22 * * *" # каждую ночь в 03:41 по Кызылорде
+  workflow_dispatch:
+
+concurrency:
+  group: database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.B2_BACKUP_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_BACKUP_APP_KEY }}
+      B2_BUCKET: ${{ secrets.B2_BACKUP_BUCKET }}
+      B2_ENDPOINT: ${{ vars.B2_ENDPOINT || 'https://s3.eu-central-003.backblazeb2.com' }}
+      AWS_DEFAULT_REGION: ${{ vars.B2_REGION || 'eu-central-003' }}
+      # Новые версии AWS CLI добавляют заголовки контрольных сумм, которые Backblaze не принимает
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      KEEP_DAYS: 30
+    steps:
+      - name: Проверка секретов
+        run: |
+          missing=""
+          for v in SUPABASE_DB_URL BACKUP_PASSPHRASE AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY B2_BUCKET; do
+            [ -n "${!v}" ] || missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Не заданы секреты:$missing (см. комментарий в начале .github/workflows/backup.yml)"
+            exit 1
+          fi
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Выгрузка базы (роли, схема, данные)
+        run: |
+          set -euo pipefail
+          mkdir -p dump
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f dump/roles.sql --role-only
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f dump/schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f dump/data.sql --use-copy --data-only \
+            -x "storage.buckets_vectors" -x "storage.vector_indexes"
+          ls -la dump
+          # Пустой файл данных — значит, что-то пошло не так
+          [ -s dump/data.sql ] || { echo "::error::Файл с данными пустой"; exit 1; }
+
+      - name: Сжатие и шифрование
+        run: |
+          set -euo pipefail
+          name="lectiva-db-$(date -u +%Y-%m-%d).tar.gz.gpg"
+          tar czf - dump | gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 \
+            --passphrase "$BACKUP_PASSPHRASE" -o "$name"
+          rm -rf dump
+          echo "BACKUP_FILE=$name" >> "$GITHUB_ENV"
+          ls -la "$name"
+
+      - name: Отправка в Backblaze B2
+        run: |
+          set -euo pipefail
+          aws s3 cp "$BACKUP_FILE" "s3://$B2_BUCKET/db/$BACKUP_FILE" --endpoint-url "$B2_ENDPOINT" --only-show-errors
+          echo "Сохранено: db/$BACKUP_FILE"
+
+      - name: Удаление бэкапов старше 30 дней
+        run: |
+          set -euo pipefail
+          cutoff=$(date -u -d "-$KEEP_DAYS days" +%Y-%m-%d)
+          aws s3 ls "s3://$B2_BUCKET/db/" --endpoint-url "$B2_ENDPOINT" | awk '{print $4}' | while read -r f; do
+            d=$(echo "$f" | sed -n 's/^lectiva-db-\([0-9-]\{10\}\)\.tar\.gz\.gpg$/\1/p')
+            if [ -n "$d" ] && [[ "$d" < "$cutoff" ]]; then
+              aws s3 rm "s3://$B2_BUCKET/db/$f" --endpoint-url "$B2_ENDPOINT" --only-show-errors
+              echo "Удалён старый бэкап: $f"
+            fi
+          done
