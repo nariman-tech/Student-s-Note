@@ -19,7 +19,12 @@ import {
   addFriendToGroup,
   getGroupNotebooks,
   addNotebook,
+  getGroupMessage,
+  pinGroupMessage,
+  subscribeToGroup,
 } from "../lib/store";
+import { refreshUnread, markGroupRead, setOpenGroup } from "../lib/unread";
+import Icon from "../components/Icon";
 import { groupInviteLink } from "../lib/links";
 import MessengerShare from "../components/MessengerShare";
 import { uploadChatAttachment, isUploadedFileUrl, formatFileSize } from "../lib/upload";
@@ -65,6 +70,13 @@ export default function GroupPage() {
   const [confirm, setConfirm] = useState<"leave" | "delete" | null>(null);
   const [deletingMessage, setDeletingMessage] = useState<GroupMessage | null>(null);
   const [codeCopied, setCodeCopied] = useState(false);
+  const [pinned, setPinned] = useState<GroupMessage | undefined>(undefined);
+  const [pinError, setPinError] = useState("");
+  const [firstUnreadId, setFirstUnreadId] = useState<string | null>(null); // где показать «Новые сообщения»
+  const [newBelow, setNewBelow] = useState(0); // пришли, пока вы листали историю вверх
+  const [flashId, setFlashId] = useState<string | null>(null); // подсветка сообщения после перехода к нему
+  const scrollToUnread = useRef(false);
+  const meRef = useRef("");
 
   const listRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true); // держим прокрутку внизу, если пользователь не листает историю
@@ -85,26 +97,106 @@ export default function GroupPage() {
       }
       setMe(userId);
       setGroup(g);
-      const [m, msgs] = await Promise.all([getGroupMembers(id), getGroupMessages(id)]);
+      meRef.current = userId;
+      // Когда последний раз открывали этот чат — до того, как отметим его прочитанным
+      const [m, msgs, unread] = await Promise.all([getGroupMembers(id), getGroupMessages(id), refreshUnread()]);
       if (cancelled) return;
       setMembers(m);
+      const readAt = unread.readAt[id];
+      const firstNew = readAt ? msgs.find((x) => x.createdAt > readAt && x.authorId !== userId) : undefined;
+      setFirstUnreadId(firstNew?.id ?? null);
+      scrollToUnread.current = !!firstNew;
       setMessages(msgs);
       setHasOlder(msgs.length === MESSAGES_PAGE);
+      setOpenGroup(id);
+      void markGroupRead(id);
 
-      unsubscribe = subscribeToGroupMessages(id, {
+      const unsubMessages = subscribeToGroupMessages(id, {
         // Своё сообщение уже добавлено после отправки — дубль по id отбрасываем
-        onInsert: (msg) => setMessages((list) => (list.some((x) => x.id === msg.id) ? list : [...list, msg])),
+        onInsert: (msg) => {
+          setMessages((list) => (list.some((x) => x.id === msg.id) ? list : [...list, msg]));
+          if (msg.authorId === meRef.current) return;
+          // Вы внизу чата и окно на экране — сообщение сразу прочитано; иначе — в счётчик «новых»
+          if (stickToBottom.current && document.visibilityState === "visible") void markGroupRead(id);
+          else if (!stickToBottom.current) setNewBelow((n) => n + 1);
+        },
         onDelete: (msgId) => setMessages((list) => list.filter((x) => x.id !== msgId)),
       });
+      const unsubGroup = subscribeToGroup(id, (changes) => setGroup((g) => (g ? { ...g, ...changes } : g)));
+      unsubscribe = () => {
+        unsubMessages();
+        unsubGroup();
+      };
     })().catch((err) => {
       console.error("Не получилось открыть группу", err);
       if (!cancelled) setNotFound(true);
     });
+    // Вернулись в окно с открытым чатом — всё, что пришло, теперь прочитано
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && stickToBottom.current) void markGroupRead(id);
+    };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       cancelled = true;
       unsubscribe();
+      document.removeEventListener("visibilitychange", onVisible);
+      setOpenGroup(null);
+      void markGroupRead(id);
     };
   }, [id]);
+
+  // Закреплённое сообщение: берём из загруженных, а если оно старое — запрашиваем отдельно
+  useEffect(() => {
+    const pid = group?.pinnedMessageId;
+    if (!pid) {
+      setPinned(undefined);
+      return;
+    }
+    const loaded = messages.find((m) => m.id === pid);
+    if (loaded) {
+      setPinned(loaded);
+      return;
+    }
+    let cancelled = false;
+    getGroupMessage(pid)
+      .then((m) => !cancelled && setPinned(m))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [group?.pinnedMessageId, messages]);
+
+  async function handlePin(messageId: string | null) {
+    if (!group) return;
+    setPinError("");
+    const before = { pinnedMessageId: group.pinnedMessageId, pinnedBy: group.pinnedBy };
+    setGroup({ ...group, pinnedMessageId: messageId ?? undefined, pinnedBy: messageId ? me : undefined });
+    try {
+      await pinGroupMessage(group.id, messageId);
+    } catch (err: any) {
+      setGroup((g) => (g ? { ...g, ...before } : g));
+      setPinError(err?.message ?? "Не получилось закрепить");
+    }
+  }
+
+  // Перейти к сообщению в ленте (закреплённое, «новые сообщения») и коротко подсветить его
+  function jumpTo(messageId: string) {
+    const el = document.getElementById(`msg-${messageId}`);
+    if (!el) return false;
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    setFlashId(messageId);
+    window.setTimeout(() => setFlashId((f) => (f === messageId ? null : f)), 1600);
+    return true;
+  }
+
+  function scrollToBottom() {
+    const el = listRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    stickToBottom.current = true;
+    setNewBelow(0);
+    if (id) void markGroupRead(id);
+  }
 
   const profilesById: Record<string, PublicProfile> = { ...extraProfiles };
   for (const m of members) profilesById[m.profile.id] = m.profile;
@@ -128,6 +220,14 @@ export default function GroupPage() {
     if (keepScrollFrom.current !== null) {
       el.scrollTop = el.scrollHeight - keepScrollFrom.current;
       keepScrollFrom.current = null;
+    } else if (scrollToUnread.current && messages.length > 0) {
+      // Первое открытие с непрочитанными — показываем с начала новых, а не с самого низа
+      scrollToUnread.current = false;
+      const divider = document.getElementById("unread-divider");
+      if (divider) {
+        el.scrollTop = Math.max(0, divider.offsetTop - 24); // список — relative, отсчёт от его начала
+        stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+      } else el.scrollTop = el.scrollHeight;
     } else if (stickToBottom.current) {
       el.scrollTop = el.scrollHeight;
     }
@@ -136,7 +236,12 @@ export default function GroupPage() {
   function handleScroll() {
     const el = listRef.current;
     if (!el) return;
-    stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    if (atBottom && !stickToBottom.current) {
+      setNewBelow(0);
+      if (id) void markGroupRead(id);
+    }
+    stickToBottom.current = atBottom;
   }
 
   async function loadOlder() {
@@ -243,11 +348,43 @@ export default function GroupPage() {
         <GroupNotebooks group={group} />
       ) : (
       <>
+      {/* Закреплённое сообщение — видно всем участникам над перепиской */}
+      {pinned && (
+        <div className="mb-2 flex items-stretch rounded-card border border-line bg-card overflow-hidden">
+          <span className="w-1 bg-highlight shrink-0" aria-hidden />
+          <button
+            onClick={() => jumpTo(pinned.id)}
+            className="flex-1 min-w-0 flex items-center gap-2.5 px-3 py-2 text-left hover:bg-paper/60"
+            title="Перейти к сообщению"
+          >
+            <Icon name="pin" size={16} className="text-ink/50 shrink-0" />
+            <span className="min-w-0">
+              <span className="block text-[11px] font-semibold text-ink/60">
+                Закреплено{pinned.authorId && profilesById[pinned.authorId] ? `, @${profilesById[pinned.authorId].username}` : ""}
+              </span>
+              <span className="block text-sm truncate">
+                {pinned.body || (pinned.attachment?.type === "image" ? "Фото" : pinned.attachment?.name ?? "Вложение")}
+              </span>
+            </span>
+          </button>
+          <button
+            onClick={() => handlePin(null)}
+            className="px-3 text-ink/35 hover:text-coral shrink-0"
+            title="Открепить"
+            aria-label="Открепить сообщение"
+          >
+            <Icon name="close" size={16} />
+          </button>
+        </div>
+      )}
+      {pinError && <p className="text-xs text-coral mb-2">{pinError}</p>}
+
       {/* Сообщения */}
+      <div className="relative flex-1 min-h-0 flex flex-col">
       <div
         ref={listRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto rounded-card border border-line bg-card px-4 py-3"
+        className="relative flex-1 overflow-y-auto rounded-card border border-line bg-card px-4 py-3"
       >
         {hasOlder && (
           <div className="text-center mb-3">
@@ -270,7 +407,14 @@ export default function GroupPage() {
               prev.authorId === m.authorId &&
               new Date(m.createdAt).getTime() - new Date(prev.createdAt).getTime() < 5 * 60_000;
             return (
-              <div key={m.id}>
+              <div key={m.id} id={`msg-${m.id}`}>
+                {m.id === firstUnreadId && (
+                  <div id="unread-divider" className="flex items-center gap-3 my-3" role="separator">
+                    <span className="flex-1 h-px bg-coral/40" />
+                    <span className="text-[11px] font-semibold text-coral">Новые сообщения</span>
+                    <span className="flex-1 h-px bg-coral/40" />
+                  </div>
+                )}
                 {newDay && (
                   <div className="text-center my-3">
                     <span className="text-[11px] text-ink/40 bg-paper rounded-full px-3 py-1">{formatDay(m.createdAt)}</span>
@@ -283,11 +427,25 @@ export default function GroupPage() {
                   grouped={grouped}
                   canDelete={m.authorId === me || isOwner}
                   onDelete={() => setDeletingMessage(m)}
+                  pinned={group.pinnedMessageId === m.id}
+                  onPin={() => handlePin(group.pinnedMessageId === m.id ? null : m.id)}
+                  flash={flashId === m.id}
                 />
               </div>
             );
           })
         )}
+      </div>
+      {/* Пришли новые сообщения, пока вы читали историю выше */}
+      {newBelow > 0 && (
+        <button
+          onClick={scrollToBottom}
+          className="absolute right-3 bottom-3 flex items-center gap-1.5 rounded-full bg-ink text-white text-xs font-semibold pl-3 pr-2.5 py-2 shadow-pop"
+        >
+          {newBelow > 99 ? "99+" : newBelow} {newBelow % 10 === 1 && newBelow % 100 !== 11 ? "новое" : "новых"}
+          <Icon name="arrowDown" size={14} />
+        </button>
+      )}
       </div>
 
       <Composer
@@ -378,6 +536,9 @@ function MessageRow({
   grouped,
   canDelete,
   onDelete,
+  pinned,
+  onPin,
+  flash,
 }: {
   message: GroupMessage;
   author?: PublicProfile;
@@ -385,6 +546,9 @@ function MessageRow({
   grouped: boolean;
   canDelete: boolean;
   onDelete: () => void;
+  pinned: boolean;
+  onPin: () => void;
+  flash: boolean;
 }) {
   const att = message.attachment && isUploadedFileUrl(message.attachment.url) ? message.attachment : undefined;
   return (
@@ -396,9 +560,9 @@ function MessageRow({
         )}
         <div className={`flex items-end gap-1.5 ${mine ? "flex-row-reverse" : ""}`}>
           <div
-            className={`rounded-card px-3 py-2 text-sm ${
+            className={`rounded-card px-3 py-2 text-sm transition-shadow duration-300 ${
               mine ? "bg-ink text-white" : "bg-paper text-ink"
-            }`}
+            } ${flash ? "ring-4 ring-highlight/70" : ""}`}
           >
             {att?.type === "image" && (
               <a href={att.url} target="_blank" rel="noopener noreferrer" className="block mb-1">
@@ -420,10 +584,21 @@ function MessageRow({
               </a>
             )}
             {message.body && <p className="whitespace-pre-wrap break-words">{message.body}</p>}
-            <span className={`block text-[10px] mt-0.5 text-right ${mine ? "text-white/50" : "text-ink/35"}`}>
+            <span className={`flex items-center justify-end gap-1 text-[10px] mt-0.5 ${mine ? "text-white/50" : "text-ink/35"}`}>
+              {pinned && <Icon name="pin" size={10} />}
               {formatTime(message.createdAt)}
             </span>
           </div>
+          <button
+            onClick={onPin}
+            className={`md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 mb-1 ${
+              pinned ? "text-ink/60 hover:text-coral" : "text-ink/30 hover:text-ink"
+            }`}
+            title={pinned ? "Открепить" : "Закрепить для всех"}
+            aria-label={pinned ? "Открепить сообщение" : "Закрепить сообщение"}
+          >
+            <Icon name="pin" size={14} />
+          </button>
           {canDelete && (
             <button
               onClick={onDelete}

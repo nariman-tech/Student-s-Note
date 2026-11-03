@@ -601,6 +601,42 @@ function rowToGroup(g: any): Group {
     memberCount: g.group_members?.[0]?.count ?? 1,
     inviteCode: g.invite_code,
     ownerId: g.owner_id,
+    pinnedMessageId: g.pinned_message_id ?? undefined,
+    pinnedBy: g.pinned_by ?? undefined,
+  };
+}
+
+// --- Закреплённое сообщение ---
+
+// Одно сообщение по id — закреплённое может быть старше загруженных 50 последних
+export async function getGroupMessage(id: string): Promise<GroupMessage | undefined> {
+  return cached(`group-message:${id}`, async () => {
+    const { data, error } = await supabase.from("group_messages").select("*").eq("id", id).maybeSingle();
+    if (error) throw error;
+    return data ? rowToMessage(data) : undefined;
+  });
+}
+
+// mid = null — открепить
+export async function pinGroupMessage(groupId: string, messageId: string | null) {
+  const { error } = await supabase.rpc("pin_group_message", { gid: groupId, mid: messageId });
+  if (error) {
+    if (error.code === "PGRST202") throw new Error("Закрепление ещё не включено на сервере (нужна migration_017_pins_unread.sql)");
+    throw error;
+  }
+}
+
+// Изменения группы у всех участников сразу: закрепили или открепили сообщение
+export function subscribeToGroup(groupId: string, onChange: (group: { pinnedMessageId?: string; pinnedBy?: string }) => void): () => void {
+  const channel = supabase
+    .channel(`group-${groupId}-${crypto.randomUUID()}`)
+    .on("postgres_changes", { event: "UPDATE", schema: "public", table: "groups", filter: `id=eq.${groupId}` }, (payload) => {
+      const g = payload.new as any;
+      onChange({ pinnedMessageId: g.pinned_message_id ?? undefined, pinnedBy: g.pinned_by ?? undefined });
+    })
+    .subscribe();
+  return () => {
+    supabase.removeChannel(channel);
   };
 }
 
