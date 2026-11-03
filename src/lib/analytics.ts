@@ -54,17 +54,27 @@ export interface FeedbackItem {
 }
 
 export async function sendFeedback(input: { rating?: number; category: FeedbackCategory; message: string }) {
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) throw new Error("Не авторизованы");
+  // id — из сохранённой сессии: запрос getUser к серверу лишний и иногда падает (истёкший токен,
+  // медленная сеть), и тогда отзыв не уходил
+  const { data } = await supabase.auth.getSession();
+  const userId = data.session?.user.id;
+  if (!userId) throw new Error("Войдите в аккаунт заново и повторите");
   const { error } = await supabase.from("feedback").insert({
-    user_id: data.user.id,
+    user_id: userId,
     rating: input.rating ?? null,
     category: input.category,
     message: input.message.trim(),
     page: window.location.pathname.slice(0, 200),
     user_agent: navigator.userAgent.slice(0, 300),
   });
-  if (error) throw error;
+  if (error) {
+    console.error("Отзыв не отправлен", error);
+    throw new Error(
+      error.code === "42P01" || /relation .*feedback/i.test(error.message)
+        ? "Отзывы ещё не включены на сервере"
+        : `Не получилось отправить отзыв: ${error.message}`
+    );
+  }
   track("feedback_sent");
 }
 
