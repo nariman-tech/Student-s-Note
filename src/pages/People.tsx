@@ -88,9 +88,7 @@ export default function People() {
       <div className="flex items-end justify-between gap-3 mb-6">
         <div>
           <h2 className="text-3xl md:text-4xl font-display font-800">Люди</h2>
-          <p className="text-sm text-ink/50 mt-1">
-            {total !== null && !query.trim() ? `${total} ${peopleWord(total)} в Lectiva` : "Все, кто учится в Lectiva"}
-          </p>
+          <p className="text-sm text-ink/50 mt-1">Все, кто учится в Lectiva</p>
         </div>
         <button
           onClick={() => load(query, "refresh")}
@@ -250,12 +248,4 @@ function PersonRow({
       )}
     </li>
   );
-}
-
-// 1 человек, 2 человека, 5 человек
-function peopleWord(n: number): string {
-  const d = n % 10,
-    dd = n % 100;
-  if (d >= 2 && d <= 4 && (dd < 12 || dd > 14)) return "человека";
-  return "человек";
 }
