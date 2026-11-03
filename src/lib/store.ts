@@ -15,6 +15,7 @@ import {
   dropPageSave,
   setOfflineUser,
 } from "./offline";
+import { realtimeMode, subscribeTopic, REALTIME_RESUMED } from "./realtime";
 import {
   Notebook,
   NotePage,
@@ -427,16 +428,41 @@ export function syncPendingSaves(): Promise<number> {
   return syncing;
 }
 
-// Изменения открытой страницы от других участников — сразу, без обновления (Supabase Realtime)
+// Изменения открытой страницы от других участников — сразу, без обновления.
+// Broadcast присылает только «страницу изменили» — саму страницу дозагружаем
 export function subscribeToPage(pageId: string, onChange: (page: NotePage) => void): () => void {
-  const channel = supabase
-    .channel(`page-${pageId}-${crypto.randomUUID()}`)
-    .on("postgres_changes", { event: "UPDATE", schema: "public", table: "notes", filter: `id=eq.${pageId}` }, (payload) =>
-      onChange(rowToPage(payload.new))
-    )
-    .subscribe();
+  let stop = () => {};
+  let cancelled = false;
+  const reload = async () => {
+    const { data } = await supabase.from("notes").select("*").eq("id", pageId).maybeSingle();
+    if (data && !cancelled) onChange(rowToPage(data));
+  };
+  realtimeMode().then((mode) => {
+    if (cancelled) return;
+    if (mode === "broadcast") {
+      const unsub = subscribeTopic(`page:${pageId}`, (event) => {
+        if (event === "page_update") void reload().catch(() => {});
+      });
+      // Вкладка была свёрнута — проверяем, не изменилась ли страница за это время
+      const onResume = () => void reload().catch(() => {});
+      window.addEventListener(REALTIME_RESUMED, onResume);
+      stop = () => {
+        unsub();
+        window.removeEventListener(REALTIME_RESUMED, onResume);
+      };
+      return;
+    }
+    const channel = supabase
+      .channel(`page-${pageId}-${crypto.randomUUID()}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "notes", filter: `id=eq.${pageId}` }, (payload) =>
+        onChange(rowToPage(payload.new))
+      )
+      .subscribe();
+    stop = () => void supabase.removeChannel(channel);
+  });
   return () => {
-    supabase.removeChannel(channel);
+    cancelled = true;
+    stop();
   };
 }
 
@@ -628,15 +654,28 @@ export async function pinGroupMessage(groupId: string, messageId: string | null)
 
 // Изменения группы у всех участников сразу: закрепили или открепили сообщение
 export function subscribeToGroup(groupId: string, onChange: (group: { pinnedMessageId?: string; pinnedBy?: string }) => void): () => void {
-  const channel = supabase
-    .channel(`group-${groupId}-${crypto.randomUUID()}`)
-    .on("postgres_changes", { event: "UPDATE", schema: "public", table: "groups", filter: `id=eq.${groupId}` }, (payload) => {
-      const g = payload.new as any;
-      onChange({ pinnedMessageId: g.pinned_message_id ?? undefined, pinnedBy: g.pinned_by ?? undefined });
-    })
-    .subscribe();
+  let stop = () => {};
+  let cancelled = false;
+  realtimeMode().then((mode) => {
+    if (cancelled) return;
+    if (mode === "broadcast") {
+      stop = subscribeTopic(`group:${groupId}`, (event, p) => {
+        if (event === "pin") onChange({ pinnedMessageId: p?.pinned_message_id ?? undefined, pinnedBy: p?.pinned_by ?? undefined });
+      });
+      return;
+    }
+    const channel = supabase
+      .channel(`group-${groupId}-${crypto.randomUUID()}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "groups", filter: `id=eq.${groupId}` }, (payload) => {
+        const g = payload.new as any;
+        onChange({ pinnedMessageId: g.pinned_message_id ?? undefined, pinnedBy: g.pinned_by ?? undefined });
+      })
+      .subscribe();
+    stop = () => void supabase.removeChannel(channel);
+  });
   return () => {
-    supabase.removeChannel(channel);
+    cancelled = true;
+    stop();
   };
 }
 
@@ -776,29 +815,54 @@ export async function deleteGroupMessage(message: GroupMessage) {
   }
 }
 
-// Новые и удалённые сообщения в реальном времени (Supabase Realtime).
-// Правила доступа действуют и здесь: придут только сообщения групп, где я участник
+// Новые и удалённые сообщения в реальном времени. Слушают только участники группы.
+// После свёрнутой вкладки (соединение отключалось) дозагружаем последние сообщения —
+// повторы по id отбрасывает сам чат
 export function subscribeToGroupMessages(
   groupId: string,
   handlers: { onInsert: (m: GroupMessage) => void; onDelete: (id: string) => void }
 ): () => void {
-  // Уникальное имя канала: supabase.channel() с уже занятым именем вернёт старый, уже подписанный
-  // канал, и добавить к нему обработчики нельзя (ошибка "cannot add callbacks after subscribe()")
-  const channel = supabase
-    .channel(`group-messages-${groupId}-${crypto.randomUUID()}`)
-    .on(
-      "postgres_changes",
-      { event: "INSERT", schema: "public", table: "group_messages", filter: `group_id=eq.${groupId}` },
-      (payload) => handlers.onInsert(rowToMessage(payload.new))
-    )
-    // Для удалений Supabase присылает только id (фильтр по группе не работает) — лишние id просто не найдутся
-    .on("postgres_changes", { event: "DELETE", schema: "public", table: "group_messages" }, (payload) => {
-      const id = (payload.old as any)?.id;
-      if (id) handlers.onDelete(id);
-    })
-    .subscribe();
+  let stop = () => {};
+  let cancelled = false;
+  realtimeMode().then((mode) => {
+    if (cancelled) return;
+    if (mode === "broadcast") {
+      const unsub = subscribeTopic(`group:${groupId}`, (event, p) => {
+        if (event === "message_insert" && p?.id) handlers.onInsert(rowToMessage(p));
+        if (event === "message_delete" && p?.id) handlers.onDelete(p.id);
+      });
+      const onResume = () =>
+        getGroupMessages(groupId)
+          .then((latest) => !cancelled && latest.forEach(handlers.onInsert))
+          .catch(() => {});
+      window.addEventListener(REALTIME_RESUMED, onResume);
+      stop = () => {
+        unsub();
+        window.removeEventListener(REALTIME_RESUMED, onResume);
+      };
+      return;
+    }
+    // Старый способ — пока не выполнена migration_018.
+    // Уникальное имя канала: supabase.channel() с уже занятым именем вернёт старый, уже подписанный
+    // канал, и добавить к нему обработчики нельзя (ошибка "cannot add callbacks after subscribe()")
+    const channel = supabase
+      .channel(`group-messages-${groupId}-${crypto.randomUUID()}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "group_messages", filter: `group_id=eq.${groupId}` },
+        (payload) => handlers.onInsert(rowToMessage(payload.new))
+      )
+      // Для удалений Supabase присылает только id (фильтр по группе не работает) — лишние id просто не найдутся
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "group_messages" }, (payload) => {
+        const id = (payload.old as any)?.id;
+        if (id) handlers.onDelete(id);
+      })
+      .subscribe();
+    stop = () => void supabase.removeChannel(channel);
+  });
   return () => {
-    supabase.removeChannel(channel);
+    cancelled = true;
+    stop();
   };
 }
 

@@ -1,0 +1,28 @@
+# Каждый день «стучимся» в базу, чтобы бесплатный проект Supabase не уснул
+# (он засыпает после недели без запросов — например, на каникулах).
+# Адрес и публичный ключ — те же, что в приложении (они не секретные).
+# Запустить вручную: GitHub → Actions → «Supabase keep-alive» → Run workflow.
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: "17 3 * * *" # каждый день в 08:17 по Кызылорде
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Запрос к базе через API
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL || 'https://pjiginlbtyuvmfgcqaxc.supabase.co' }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || 'sb_publishable_sVeOU3q7qruQZ_PQz-VcIA_CA_hU8Jh' }}
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 10 \
+            "$SUPABASE_URL/rest/v1/groups?select=id&limit=1" -H "apikey: $SUPABASE_ANON_KEY")
+          echo "Ответ базы: HTTP $code"
+          if [ "$code" != "200" ]; then
+            echo "::error::База не ответила (HTTP $code). Возможно, проект уже на паузе — разбудите его в панели Supabase (Restore project)."
+            exit 1
+          fi

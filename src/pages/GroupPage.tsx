@@ -77,6 +77,7 @@ export default function GroupPage() {
   const [flashId, setFlashId] = useState<string | null>(null); // подсветка сообщения после перехода к нему
   const scrollToUnread = useRef(false);
   const meRef = useRef("");
+  const seenIds = useRef(new Set<string>()); // id сообщений, которые уже есть в ленте
 
   const listRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true); // держим прокрутку внизу, если пользователь не листает историю
@@ -114,6 +115,9 @@ export default function GroupPage() {
       const unsubMessages = subscribeToGroupMessages(id, {
         // Своё сообщение уже добавлено после отправки — дубль по id отбрасываем
         onInsert: (msg) => {
+          // После свёрнутой вкладки приходят и уже показанные сообщения — их не считаем новыми
+          if (seenIds.current.has(msg.id)) return;
+          seenIds.current.add(msg.id);
           setMessages((list) => (list.some((x) => x.id === msg.id) ? list : [...list, msg]));
           if (msg.authorId === meRef.current) return;
           // Вы внизу чата и окно на экране — сообщение сразу прочитано; иначе — в счётчик «новых»
@@ -144,6 +148,10 @@ export default function GroupPage() {
       void markGroupRead(id);
     };
   }, [id]);
+
+  useEffect(() => {
+    seenIds.current = new Set(messages.map((m) => m.id));
+  }, [messages]);
 
   // Закреплённое сообщение: берём из загруженных, а если оно старое — запрашиваем отдельно
   useEffect(() => {
