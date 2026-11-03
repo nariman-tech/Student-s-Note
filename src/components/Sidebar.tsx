@@ -12,6 +12,7 @@ export const NAV_LINKS: { to: string; label: string; icon: IconName; end?: boole
   { to: "/flashcards", label: "Флеш-карты", icon: "cards" },
   { to: "/groups", label: "Группы", icon: "groups" },
   { to: "/friends", label: "Друзья", icon: "friends" },
+  { to: "/people", label: "Люди", icon: "people" },
 ];
 
 // Счётчик заявок в друзья (общий для боковой панели и нижнего меню на телефоне): при переходе
@@ -179,7 +180,7 @@ export function MobileNav({ profile }: { profile: PublicProfile }) {
       </header>
 
       <nav
-        className="md:hidden fixed bottom-0 inset-x-0 z-20 bg-card/95 backdrop-blur border-t border-line grid grid-cols-4 print:hidden"
+        className="md:hidden fixed bottom-0 inset-x-0 z-20 bg-card/95 backdrop-blur border-t border-line grid grid-cols-5 print:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {NAV_LINKS.map((link) => (
@@ -188,7 +189,7 @@ export function MobileNav({ profile }: { profile: PublicProfile }) {
             to={link.to}
             end={link.end}
             className={({ isActive }) =>
-              `relative flex flex-col items-center justify-center gap-1 h-16 text-[11px] font-semibold ${
+              `relative flex flex-col items-center justify-center gap-1 h-16 text-[10.5px] font-semibold ${
                 isActive ? "text-ink" : "text-ink/40"
               }`
             }
@@ -196,7 +197,7 @@ export function MobileNav({ profile }: { profile: PublicProfile }) {
             {({ isActive }) => (
               <>
                 <span
-                  className={`flex items-center justify-center w-12 h-7 rounded-full transition-colors ${
+                  className={`flex items-center justify-center w-11 h-7 rounded-full transition-colors ${
                     isActive ? "bg-highlight/70" : ""
                   }`}
                 >

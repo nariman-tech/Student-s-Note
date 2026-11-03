@@ -12,6 +12,7 @@ const Groups = lazy(() => import("./pages/Groups"));
 const JoinByLink = lazy(() => import("./pages/Groups").then((m) => ({ default: m.JoinByLink })));
 const GroupPage = lazy(() => import("./pages/GroupPage"));
 const Friends = lazy(() => import("./pages/Friends"));
+const People = lazy(() => import("./pages/People"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
@@ -65,6 +66,7 @@ function AppShell({ profile, onProfileChange }: { profile: PublicProfile; onProf
           <Route path="/groups/:id" element={<GroupPage />} />
           <Route path="/join/:code" element={<JoinByLink />} />
           <Route path="/friends" element={<Friends />} />
+          <Route path="/people" element={<People />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/settings" element={<Settings profile={profile} onProfileChange={onProfileChange} />} />
         </Routes>

@@ -19,6 +19,11 @@ const PATHS: Record<string, string> = {
   shield: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
   chevron: "M9 18l6-6-6-6",
   back: "M15 18l-6-6 6-6",
+  people: "M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 9.5-4.9M17 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM22 22l-2.8-2.8",
+  refresh: "M21 12a9 9 0 1 1-2.6-6.4L21 8M21 3v5h-5",
+  search: "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3",
+  check: "M20 6 9 17l-5-5",
+  close: "M18 6 6 18M6 6l12 12",
 };
 
 export type IconName = keyof typeof PATHS;
