@@ -3,6 +3,7 @@
 
 import { supabase } from "./supabase";
 
+import { t } from "./i18n";
 export type TrackedEvent =
   | "app_open"
   | "pdf_export"
@@ -58,7 +59,7 @@ export async function sendFeedback(input: { rating?: number; category: FeedbackC
   // медленная сеть), и тогда отзыв не уходил
   const { data } = await supabase.auth.getSession();
   const userId = data.session?.user.id;
-  if (!userId) throw new Error("Войдите в аккаунт заново и повторите");
+  if (!userId) throw new Error(t("Войдите в аккаунт заново и повторите"));
   const { error } = await supabase.from("feedback").insert({
     user_id: userId,
     rating: input.rating ?? null,
@@ -71,8 +72,8 @@ export async function sendFeedback(input: { rating?: number; category: FeedbackC
     console.error("Отзыв не отправлен", error);
     throw new Error(
       error.code === "42P01" || /relation .*feedback/i.test(error.message)
-        ? "Отзывы ещё не включены на сервере"
-        : `Не получилось отправить отзыв: ${error.message}`
+        ? t("Отзывы ещё не включены на сервере")
+        : t("Не получилось отправить отзыв: {0}", [error.message])
     );
   }
   track("feedback_sent");

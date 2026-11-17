@@ -3,6 +3,7 @@ import { clearOfflineData, isOnline } from "./offline";
 import { resetUnread } from "./unread";
 import type { Session } from "@supabase/supabase-js";
 
+import { t } from "./i18n";
 // Регистрация по email+паролю. Возвращает true, если сессия появилась сразу
 // (email-подтверждение выключено в настройках Supabase), false — если нужно
 // сначала подтвердить почту по ссылке и только потом входить паролем.
@@ -34,22 +35,22 @@ export function authErrorMessage(err: any): string {
   const code: string = err?.code ?? "";
   const msg: string = err?.message ?? "";
   if (code === "email_not_confirmed" || /email not confirmed/i.test(msg))
-    return "Почта ещё не подтверждена. Откройте ссылку из письма (проверьте папку «Спам») или отправьте письмо ещё раз.";
+    return t("Почта ещё не подтверждена. Откройте ссылку из письма (проверьте папку «Спам») или отправьте письмо ещё раз.");
   if (code === "invalid_credentials" || /invalid login credentials/i.test(msg))
-    return "Неверная почта или пароль.";
+    return t("Неверная почта или пароль.");
   if (code === "user_already_exists" || /already registered/i.test(msg))
-    return "Такая почта уже зарегистрирована — войдите во вкладке «Войти».";
+    return t("Такая почта уже зарегистрирована — войдите во вкладке «Войти».");
   if (code === "over_email_send_rate_limit" || /rate limit/i.test(msg))
-    return "Слишком много писем за короткое время. Подождите немного и попробуйте снова.";
+    return t("Слишком много писем за короткое время. Подождите немного и попробуйте снова.");
   if (code === "same_password" || /should be different from the old/i.test(msg))
-    return "Новый пароль должен отличаться от старого.";
+    return t("Новый пароль должен отличаться от старого.");
   if (code === "weak_password" || /password should be/i.test(msg))
-    return "Слишком простой пароль — минимум 6 символов.";
+    return t("Слишком простой пароль — минимум 6 символов.");
   if (code === "signup_disabled" || /signups not allowed/i.test(msg))
-    return "Регистрация новых пользователей сейчас закрыта.";
+    return t("Регистрация новых пользователей сейчас закрыта.");
   if (/provider is not enabled/i.test(msg))
-    return "Вход через Google пока не настроен. Войдите по почте и паролю.";
-  return msg || "Что-то пошло не так. Попробуйте ещё раз.";
+    return t("Вход через Google пока не настроен. Войдите по почте и паролю.");
+  return msg || t("Что-то пошло не так. Попробуйте ещё раз.");
 }
 
 export async function signInWithPassword(email: string, password: string) {

@@ -2,26 +2,27 @@ import { useEffect, useState } from "react";
 import { sendFeedback, FeedbackCategory } from "../lib/analytics";
 import Icon, { IconName } from "./Icon";
 
+import { t } from "../lib/i18n";
 const RATINGS = [
-  { value: 1, label: "Плохо" },
-  { value: 2, label: "Так себе" },
-  { value: 3, label: "Нормально" },
-  { value: 4, label: "Хорошо" },
-  { value: 5, label: "Отлично" },
+  { value: 1, label: t("Плохо") },
+  { value: 2, label: t("Так себе") },
+  { value: 3, label: t("Нормально") },
+  { value: 4, label: t("Хорошо") },
+  { value: 5, label: t("Отлично") },
 ];
 
 const CATEGORIES: { value: FeedbackCategory; label: string; icon: IconName }[] = [
-  { value: "like", label: "Нравится", icon: "like" },
-  { value: "bug", label: "Нашёл ошибку", icon: "bug" },
-  { value: "idea", label: "Идея", icon: "idea" },
-  { value: "other", label: "Другое", icon: "chat" },
+  { value: "like", label: t("Нравится"), icon: "like" },
+  { value: "bug", label: t("Нашёл ошибку"), icon: "bug" },
+  { value: "idea", label: t("Идея"), icon: "idea" },
+  { value: "other", label: t("Другое"), icon: "chat" },
 ];
 
 const PLACEHOLDERS: Record<FeedbackCategory, string> = {
-  like: "Что особенно нравится?",
-  bug: "Что случилось и что вы делали перед этим? Чем подробнее, тем быстрее исправим",
-  idea: "Чего не хватает? Что бы вы добавили?",
-  other: "Напишите, что думаете",
+  like: t("Что особенно нравится?"),
+  bug: t("Что случилось и что вы делали перед этим? Чем подробнее, тем быстрее исправим"),
+  idea: t("Чего не хватает? Что бы вы добавили?"),
+  other: t("Напишите, что думаете"),
 };
 
 // Окно «Отзыв»: оценка звёздами + тип + текст
@@ -44,7 +45,7 @@ export function FeedbackModal({ initialRating, onClose }: { initialRating?: numb
       markFeedbackGiven();
       setSent(true);
     } catch (err: any) {
-      setError(err?.message ?? "Не получилось отправить отзыв");
+      setError(err?.message ?? t("Не получилось отправить отзыв"));
     } finally {
       setSending(false);
     }
@@ -58,19 +59,19 @@ export function FeedbackModal({ initialRating, onClose }: { initialRating?: numb
             <span className="w-12 h-12 rounded-full bg-highlight/40 text-ink flex items-center justify-center mx-auto mb-3">
               <Icon name="heart" size={24} filled />
             </span>
-            <h3 className="font-display font-700 mb-1">Спасибо за отзыв!</h3>
-            <p className="text-sm text-ink/50 mb-5">Мы читаем каждый — так приложение становится лучше.</p>
+            <h3 className="font-display font-700 mb-1">{t("Спасибо за отзыв!")}</h3>
+            <p className="text-sm text-ink/50 mb-5">{t("Мы читаем каждый — так приложение становится лучше.")}</p>
             <button onClick={onClose} className="px-4 py-2 text-sm rounded-card bg-ink text-white hover:bg-ink/90">
-              Закрыть
+              {t("Закрыть")}
             </button>
           </div>
         ) : (
           <>
-            <h3 className="font-display font-700 mb-1">Как вам Lectiva?</h3>
-            <p className="text-xs text-ink/50 mb-4">Оценка и пара слов очень помогут</p>
+            <h3 className="font-display font-700 mb-1">{t("Как вам Lectiva?")}</h3>
+            <p className="text-xs text-ink/50 mb-4">{t("Оценка и пара слов очень помогут")}</p>
 
             {/* Оценка звёздами: подсвечиваются все до выбранной */}
-            <div className="flex items-center gap-1 mb-1" role="radiogroup" aria-label="Оценка">
+            <div className="flex items-center gap-1 mb-1" role="radiogroup" aria-label={t("Оценка")}>
               {RATINGS.map((r) => {
                 const on = rating !== undefined && r.value <= rating;
                 return (
@@ -112,21 +113,21 @@ export function FeedbackModal({ initialRating, onClose }: { initialRating?: numb
               maxLength={2000}
               rows={4}
               placeholder={PLACEHOLDERS[category]}
-              aria-label="Текст отзыва"
+              aria-label={t("Текст отзыва")}
               className="w-full rounded-card border border-line px-3 py-2 text-sm resize-none"
             />
             {error && <p className="text-xs text-coral mt-2">{error}</p>}
 
             <div className="flex justify-end gap-2 mt-4">
               <button onClick={onClose} className="px-4 py-2 text-sm text-ink/60 hover:text-ink">
-                Отмена
+                {t("Отмена")}
               </button>
               <button
                 onClick={handleSend}
                 disabled={!canSend}
                 className="px-4 py-2 text-sm rounded-card bg-ink text-white hover:bg-ink/90 disabled:opacity-40"
               >
-                {sending ? "Отправляем…" : "Отправить"}
+                {sending ? t("Отправляем…") : t("Отправить")}
               </button>
             </div>
           </>
@@ -214,10 +215,10 @@ export function FeedbackPrompt() {
   return (
     <div
       role="dialog"
-      aria-label="Нравится Lectiva?"
+      aria-label={t("Нравится Lectiva?")}
       className="fixed z-40 bottom-20 md:bottom-6 right-4 left-4 md:left-auto md:w-80 bg-card border border-line rounded-card shadow-lg p-4 print:hidden"
     >
-      <p className="text-sm font-medium mb-3">Нравится Lectiva?</p>
+      <p className="text-sm font-medium mb-3">{t("Нравится Lectiva?")}</p>
       <div className="flex gap-1 mb-3 text-ink/20">
         {RATINGS.map((r) => (
           <button
@@ -232,7 +233,7 @@ export function FeedbackPrompt() {
         ))}
       </div>
       <button onClick={snooze} className="text-xs text-ink/40 hover:text-ink">
-        Позже
+        {t("Позже")}
       </button>
     </div>
   );

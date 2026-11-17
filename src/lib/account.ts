@@ -12,6 +12,7 @@ import { supabase } from "./supabase";
 import { signOut } from "./auth";
 import { clearOfflineData } from "./offline";
 
+import { t } from "./i18n";
 const BUCKET = "uploads";
 const SUPABASE_FILES = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/${BUCKET}/`;
 const WORKER = (import.meta.env.VITE_FILES_WORKER_URL ?? "").replace(/\/$/, "");
@@ -82,7 +83,7 @@ async function purgeWorkerStorage(kept: Set<string>) {
   if (!WORKER) return;
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
-  if (!token) throw new Error("Не авторизованы");
+  if (!token) throw new Error(t("Не авторизованы"));
   let after: string | null = null;
   for (let round = 0; round < 50; round++) {
     const res = await fetch(`${WORKER}/account/purge`, {
@@ -91,22 +92,22 @@ async function purgeWorkerStorage(kept: Set<string>) {
       body: JSON.stringify({ keep: [...kept], after }),
     });
     const body = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(body.error ?? `Хранилище файлов ответило ошибкой ${res.status}`);
+    if (!res.ok) throw new Error(body.error ?? t("Хранилище файлов ответило ошибкой {0}", [res.status]));
     if (body.done) return;
     after = body.next;
   }
 }
 
 export async function deleteMyAccount(onStep: (step: DeletionStep) => void) {
-  if (!navigator.onLine) throw new Error("Для удаления аккаунта нужен интернет");
+  if (!navigator.onLine) throw new Error(t("Для удаления аккаунта нужен интернет"));
   const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError || !userData.user) throw new Error("Не авторизованы — войдите заново и повторите");
+  if (userError || !userData.user) throw new Error(t("Не авторизованы — войдите заново и повторите"));
   const userId = userData.user.id;
 
   onStep("collect");
   // Сначала убеждаемся, что сервер умеет удалять аккаунт — до того, как стирать файлы
   const { error: checkError } = await supabase.rpc("account_deletion_available");
-  if (checkError) throw new Error("Удаление аккаунта ещё не включено на сервере — попробуйте позже или напишите в поддержку");
+  if (checkError) throw new Error(t("Удаление аккаунта ещё не включено на сервере — попробуйте позже или напишите в поддержку"));
   const kept = await collectKeptFiles(userId);
 
   onStep("files");

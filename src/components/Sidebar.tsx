@@ -7,12 +7,13 @@ import { OfflineBadge } from "./OfflineStatus";
 import { useUnread } from "../lib/unread";
 import { isAdmin } from "../lib/analytics";
 
+import { t } from "../lib/i18n";
 export const NAV_LINKS: { to: string; label: string; icon: IconName; end?: boolean }[] = [
-  { to: "/", label: "Тетради", icon: "notebooks", end: true },
-  { to: "/flashcards", label: "Флеш-карты", icon: "cards" },
-  { to: "/groups", label: "Группы", icon: "groups" },
-  { to: "/friends", label: "Друзья", icon: "friends" },
-  { to: "/people", label: "Люди", icon: "people" },
+  { to: "/", label: t("Тетради"), icon: "notebooks", end: true },
+  { to: "/flashcards", label: t("Флеш-карты"), icon: "cards" },
+  { to: "/groups", label: t("Группы"), icon: "groups" },
+  { to: "/friends", label: t("Друзья"), icon: "friends" },
+  { to: "/people", label: t("Люди"), icon: "people" },
 ];
 
 // Счётчик заявок в друзья (общий для боковой панели и нижнего меню на телефоне): при переходе
@@ -68,7 +69,7 @@ export function RequestsBadge({ count, className = "" }: { count: number; classN
   return (
     <span
       className={`min-w-5 h-5 px-1.5 rounded-full bg-coral text-white text-[11px] font-semibold flex items-center justify-center ${className}`}
-      aria-label={`Заявок в друзья: ${count}`}
+      aria-label={t("Заявок в друзья: {0}", [count])}
     >
       {count > 99 ? "99+" : count}
     </span>
@@ -132,15 +133,15 @@ export default function Sidebar({ profile }: { profile: PublicProfile }) {
         {NAV_LINKS.map((link) => (
           <SideLink key={link.to} {...link}>
             {link.to === "/friends" && <RequestsBadge count={pendingRequests} className="ml-auto" />}
-            {link.to === "/groups" && <CountBadge count={unread.total} label="Непрочитанных сообщений" className="ml-auto" />}
+            {link.to === "/groups" && <CountBadge count={unread.total} label={t("Непрочитанных сообщений")} className="ml-auto" />}
           </SideLink>
         ))}
       </nav>
 
       <div className="mt-auto flex flex-col gap-1">
         <OfflineBadge />
-        {admin && <SideLink to="/admin" icon="chart" label="Аналитика" />}
-        <SideLink to="/settings" icon="settings" label="Настройки" />
+        {admin && <SideLink to="/admin" icon="chart" label={t("Аналитика")} />}
+        <SideLink to="/settings" icon="settings" label={t("Настройки")} />
       </div>
 
       {/* Профиль внизу — ведёт в настройки */}
@@ -148,7 +149,7 @@ export default function Sidebar({ profile }: { profile: PublicProfile }) {
       <NavLink
         to="/settings"
         className="flex items-center gap-3 px-2 py-2 rounded-card hover:bg-white/[0.04]"
-        title="Настройки"
+        title={t("Настройки")}
       >
         <Avatar profile={profile} size="md" />
         <div className="min-w-0">
@@ -179,7 +180,7 @@ export function MobileNav({ profile }: { profile: PublicProfile }) {
         </span>
         <div className="flex items-center gap-2">
           <OfflineBadge compact />
-          <NavLink to="/settings" className="flex items-center gap-2 rounded-full p-0.5 hover:bg-white/5" aria-label="Настройки">
+          <NavLink to="/settings" className="flex items-center gap-2 rounded-full p-0.5 hover:bg-white/5" aria-label={t("Настройки")}>
             <Avatar profile={profile} size="sm" />
           </NavLink>
         </div>
@@ -212,7 +213,7 @@ export function MobileNav({ profile }: { profile: PublicProfile }) {
                 {link.label}
                 {link.to === "/friends" && <RequestsBadge count={pendingRequests} className="absolute top-1 left-1/2 ml-3" />}
                 {link.to === "/groups" && (
-                  <CountBadge count={unread.total} label="Непрочитанных сообщений" className="absolute top-1 left-1/2 ml-3" />
+                  <CountBadge count={unread.total} label={t("Непрочитанных сообщений")} className="absolute top-1 left-1/2 ml-3" />
                 )}
               </>
             )}

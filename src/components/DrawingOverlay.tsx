@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
 import html2canvas from "html2canvas";
 
+import { t } from "../lib/i18n";
 interface Props {
   targetRef: React.RefObject<HTMLElement>; // область, поверх которой рисуем (текст + картинки)
   onAttach: (canvas: HTMLCanvasElement) => void;
@@ -135,7 +136,7 @@ export default function DrawingOverlay({ targetRef, onAttach, onClose }: Props) 
         className="absolute z-10 flex flex-wrap items-center gap-1.5 bg-ink/90 backdrop-blur rounded-card px-1.5 py-1 shadow-lg select-none cursor-grab touch-none max-w-[calc(100%-16px)]"
         style={{ left: toolbarPos.x, top: toolbarPos.y, cursor: dragging ? "grabbing" : "grab" }}
       >
-        <span className="text-white/60 px-1 text-sm leading-none" title="Перетащить панель">
+        <span className="text-white/60 px-1 text-sm leading-none" title={t("Перетащить панель")}>
           ⠿
         </span>
 
@@ -143,16 +144,16 @@ export default function DrawingOverlay({ targetRef, onAttach, onClose }: Props) 
           <button
             onClick={() => setTool("pencil")}
             className={`px-1.5 py-1 rounded-card text-[11px] text-white ${tool === "pencil" ? "bg-white/20 font-medium" : "opacity-60"}`}
-            aria-label="Карандаш"
-            title="Карандаш"
+            aria-label={t("Карандаш")}
+            title={t("Карандаш")}
           >
             <Icon name="edit" size={15} />
           </button>
           <button
             onClick={() => setTool("eraser")}
             className={`px-1.5 py-1 rounded-card text-[11px] text-white ${tool === "eraser" ? "bg-white/20 font-medium" : "opacity-60"}`}
-            aria-label="Ластик"
-            title="Ластик"
+            aria-label={t("Ластик")}
+            title={t("Ластик")}
           >
             <Icon name="eraser" size={15} />
           </button>
@@ -166,7 +167,7 @@ export default function DrawingOverlay({ targetRef, onAttach, onClose }: Props) 
                 onClick={() => setColor(c)}
                 className={`w-3.5 h-3.5 rounded-full border ${color === c ? "border-white" : "border-white/30"}`}
                 style={{ backgroundColor: c }}
-                aria-label={`Цвет пера ${c}`}
+                aria-label={t("Цвет пера {0}", [c])}
               />
             ))}
           </div>
@@ -181,13 +182,13 @@ export default function DrawingOverlay({ targetRef, onAttach, onClose }: Props) 
           className="w-12"
         />
 
-        <button onClick={handleClear} className="text-[11px] text-white/70 hover:text-white px-1" title="Очистить" aria-label="Очистить">
+        <button onClick={handleClear} className="text-[11px] text-white/70 hover:text-white px-1" title={t("Очистить")} aria-label={t("Очистить")}>
           <Icon name="trash" size={15} />
         </button>
-        <button onClick={handleScreenshot} className="text-[11px] rounded-card bg-highlight text-ink font-medium px-2 py-1" title="Сделать снимок и прикрепить" aria-label="Сделать снимок и прикрепить">
+        <button onClick={handleScreenshot} className="text-[11px] rounded-card bg-highlight text-ink font-medium px-2 py-1" title={t("Сделать снимок и прикрепить")} aria-label={t("Сделать снимок и прикрепить")}>
           <Icon name="camera" size={15} />
         </button>
-        <button onClick={onClose} className="text-[11px] text-white/70 hover:text-white px-1" title="Закрыть рисование" aria-label="Закрыть рисование">
+        <button onClick={onClose} className="text-[11px] text-white/70 hover:text-white px-1" title={t("Закрыть рисование")} aria-label={t("Закрыть рисование")}>
           <Icon name="close" size={15} />
         </button>
       </div>

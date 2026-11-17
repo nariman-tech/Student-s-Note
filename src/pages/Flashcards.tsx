@@ -15,12 +15,13 @@ import FriendsShareModal, { ShareTarget } from "../components/FriendsShareModal"
 import { getShareToken, enableShareLink, disableShareLink, flashcardSetLink } from "../lib/links";
 import ConfirmDialog from "../components/ConfirmDialog";
 
+import { t, plural } from "../lib/i18n";
 type CardRow = { front: string; back: string };
 
 function setShareTarget(setId: string, title: string): ShareTarget {
   return {
-    heading: "Поделиться модулем",
-    hint: "отмеченные друзья смогут изучать карточки в приложении, но не менять.",
+    heading: t("Поделиться модулем"),
+    hint: t("отмеченные друзья смогут изучать карточки в приложении, но не менять."),
     loadShared: () => getFlashcardSetShares(setId),
     share: (friendId) => shareFlashcardSet(setId, friendId),
     unshare: (friendId) => unshareFlashcardSet(setId, friendId),
@@ -29,7 +30,7 @@ function setShareTarget(setId: string, title: string): ShareTarget {
       enable: () => enableShareLink("flashcard_sets", setId),
       disable: () => disableShareLink("flashcard_sets", setId),
       url: flashcardSetLink,
-      messageText: `Поучи со мной флеш-карты «${title}» в приложении Lectiva`,
+      messageText: t("Поучи со мной флеш-карты «{0}» в приложении Lectiva", [title]),
     },
   };
 }
@@ -73,7 +74,7 @@ export default function Flashcards() {
   return (
     <div className="px-4 py-6 md:px-10 md:py-10 max-w-5xl mx-auto">
       {loading ? (
-        <p className="text-sm text-ink/40">Загрузка…</p>
+        <p className="text-sm text-ink/40">{t("Загрузка…")}</p>
       ) : !activeSet ? (
         <ModulesGrid
           sets={sets}
@@ -104,8 +105,8 @@ export default function Flashcards() {
       )}
       {deletingSet && (
         <ConfirmDialog
-          title="Удалить модуль?"
-          text={`«${deletingSet.title}» удалится вместе со всеми карточками (${deletingSet.cards.length}). Отменить это нельзя.`}
+          title={t("Удалить модуль?")}
+          text={t("«{0}» удалится вместе со всеми карточками ({1}). Отменить это нельзя.", [deletingSet.title, deletingSet.cards.length])}
           onConfirm={async () => {
             await deleteFlashcardSet(deletingSet.id);
             setActiveSetId(null);
@@ -145,19 +146,19 @@ function ModulesGrid({
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h2 className="text-3xl md:text-4xl font-display font-800">Модули флеш-карт</h2>
-          <p className="text-sm text-ink/50 mt-1">Свои наборы терминов для изучения</p>
+          <h2 className="text-3xl md:text-4xl font-display font-800">{t("Модули флеш-карт")}</h2>
+          <p className="text-sm text-ink/50 mt-1">{t("Свои наборы терминов для изучения")}</p>
         </div>
         <button
           onClick={onCreate}
           className="text-sm rounded-card bg-ink text-white px-4 py-2.5 font-medium hover:bg-ink/90"
         >
-          + Создать модуль
+          {t("+ Создать модуль")}
         </button>
       </div>
 
       {sets.length === 0 ? (
-        <p className="text-sm text-ink/50">Пока нет модулей — создайте первый.</p>
+        <p className="text-sm text-ink/50">{t("Пока нет модулей — создайте первый.")}</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
           {sets.map((s) => (
@@ -168,8 +169,8 @@ function ModulesGrid({
 
       {shared.length > 0 && (
         <div className="mt-10">
-          <h3 className="font-display font-700 mb-1">Со мной поделились</h3>
-          <p className="text-sm text-ink/50 mb-4">Модули друзей — можно изучать, но не менять</p>
+          <h3 className="font-display font-700 mb-1">{t("Со мной поделились")}</h3>
+          <p className="text-sm text-ink/50 mb-4">{t("Модули друзей — можно изучать, но не менять")}</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
             {shared.map((s) => (
               <ModuleCard key={s.set.id} set={s.set} ownerUsername={s.owner.username} onOpen={() => onOpen(s.set.id)} />
@@ -203,7 +204,7 @@ function ModuleCard({ set, ownerUsername, onOpen }: { set: FlashcardSet; ownerUs
         </div>
         <div className="p-3">
           <h3 className="font-display font-700 text-sm leading-snug mb-1 line-clamp-2">{set.title}</h3>
-          {ownerUsername && <p className="text-xs text-lavender font-medium mb-0.5">от @{ownerUsername}</p>}
+          {ownerUsername && <p className="text-xs text-lavender font-medium mb-0.5">{t("от @")}{ownerUsername}</p>}
           <p className="text-xs text-ink/50">{set.cards.length} {cardsWord(set.cards.length)}</p>
         </div>
       </button>
@@ -215,8 +216,8 @@ function ModuleCard({ set, ownerUsername, onOpen }: { set: FlashcardSet; ownerUs
           setShareOpen(true);
         }}
         className="absolute top-2 right-2 w-7 h-7 rounded-full bg-card/90 border border-line flex items-center justify-center text-xs hover:border-ink/40"
-        aria-label="Поделиться модулем"
-        title="Поделиться"
+        aria-label={t("Поделиться модулем")}
+        title={t("Поделиться")}
       >
         <Icon name="link" size={14} />
       </button>
@@ -272,7 +273,7 @@ export function StudySession({
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         {onBack ? (
           <button onClick={onBack} className="text-sm text-ink/50 hover:text-ink flex items-center gap-1">
-            <Icon name="arrowLeft" size={15} /> Все модули
+            <Icon name="arrowLeft" size={15} /> {t("Все модули")}
           </button>
         ) : (
           <span />
@@ -283,19 +284,19 @@ export function StudySession({
             onClick={onEdit}
             className="text-sm rounded-card border border-line px-3 py-2 hover:border-ink/40 flex items-center gap-1.5"
           >
-            <Icon name="edit" size={15} /> Изменить
+            <Icon name="edit" size={15} /> {t("Изменить")}
           </button>
           <button
             onClick={() => setShareOpen(true)}
             className="text-sm rounded-card border border-line px-3 py-2 hover:border-ink/40 flex items-center gap-1.5"
           >
-            <Icon name="link" size={15} /> Поделиться
+            <Icon name="link" size={15} /> {t("Поделиться")}
           </button>
           <button
             onClick={onDelete}
             className="text-sm rounded-card border border-line px-3 py-2 hover:border-coral hover:text-coral"
-            title="Удалить модуль"
-            aria-label="Удалить модуль"
+            title={t("Удалить модуль")}
+            aria-label={t("Удалить модуль")}
           >
             <Icon name="trash" size={16} />
           </button>
@@ -304,14 +305,14 @@ export function StudySession({
       </div>
 
       <h2 className="text-xl font-display font-800 mb-1">{set.title}</h2>
-      {ownerUsername && <p className="text-xs text-ink/40">Модуль @{ownerUsername} · только изучение</p>}
+      {ownerUsername && <p className="text-xs text-ink/40">{t("Модуль @")}{ownerUsername} {t("· только изучение")}</p>}
 
       {set.cards.length === 0 ? (
-        <p className="text-sm text-ink/50 mt-4">В этом модуле пока нет карточек.</p>
+        <p className="text-sm text-ink/50 mt-4">{t("В этом модуле пока нет карточек.")}</p>
       ) : currentCard ? (
         <>
           <p className="text-xs text-ink/40 mb-2 mt-4">
-            Знаю: {knownCount} / {set.cards.length} · Осталось изучить: {queue.length}
+            {t("Знаю:")}{" "}{knownCount} / {set.cards.length} {t("· Осталось изучить:")}{" "}{queue.length}
           </p>
           <button
             onClick={() => setFlipped((f) => !f)}
@@ -320,7 +321,7 @@ export function StudySession({
             {flipped ? currentCard.back : currentCard.front}
           </button>
           <p className="text-center text-xs text-ink/40 mt-3">
-            Нажмите на карточку, чтобы перевернуть и увидеть {flipped ? "термин" : "определение"}
+            {t("Нажмите на карточку, чтобы перевернуть и увидеть")}{" "}{flipped ? t("термин") : t("определение")}
           </p>
 
           <div className="flex justify-center gap-3 mt-4">
@@ -328,13 +329,13 @@ export function StudySession({
               onClick={handleDontKnow}
               className="px-5 py-2.5 text-sm rounded-card bg-coral/15 text-coral font-medium hover:bg-coral/25 flex items-center gap-1.5"
             >
-              <Icon name="close" size={15} /> Не знаю
+              <Icon name="close" size={15} /> {t("Не знаю")}
             </button>
             <button
               onClick={handleKnow}
               className="px-5 py-2.5 text-sm rounded-card bg-sage/15 text-sage font-medium hover:bg-sage/25 flex items-center gap-1.5"
             >
-              <Icon name="check" size={15} /> Знаю
+              <Icon name="check" size={15} /> {t("Знаю")}
             </button>
           </div>
         </>
@@ -343,12 +344,12 @@ export function StudySession({
           <span className="w-14 h-14 rounded-full bg-highlight/40 text-ink flex items-center justify-center mx-auto mb-3">
             <Icon name="trophy" size={28} />
           </span>
-          <p className="font-display font-700 mb-1">Вы выучили весь модуль!</p>
+          <p className="font-display font-700 mb-1">{t("Вы выучили весь модуль!")}</p>
           <p className="text-sm text-ink/50 mb-5">
-            {knownCount} из {set.cards.length} {cardsWord(set.cards.length)} — знаю
+            {knownCount} {t("из")}{" "}{set.cards.length} {cardsWord(set.cards.length)} {t("— знаю")}
           </p>
           <button onClick={restart} className="px-4 py-2 text-sm rounded-card bg-ink text-white hover:bg-ink/90">
-            Повторить ещё раз
+            {t("Повторить ещё раз")}
           </button>
         </div>
       )}
@@ -410,7 +411,7 @@ function CreateSetModal({
         await onCreated(set.id);
       }
     } catch (err: any) {
-      setCreateError(err?.message ?? (editSet ? "Не получилось сохранить модуль" : "Не получилось создать модуль"));
+      setCreateError(err?.message ?? (editSet ? t("Не получилось сохранить модуль") : t("Не получилось создать модуль")));
     } finally {
       setCreating(false);
     }
@@ -419,13 +420,13 @@ function CreateSetModal({
   return (
     <div className="fixed inset-0 bg-ink/40 flex items-center justify-center z-30 p-4" onClick={onClose}>
       <div className="bg-card rounded-card p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <h3 className="font-display font-700 mb-4">{editSet ? "Изменить модуль" : "Новый модуль флеш-карт"}</h3>
+        <h3 className="font-display font-700 mb-4">{editSet ? t("Изменить модуль") : t("Новый модуль флеш-карт")}</h3>
 
         <input
           autoFocus
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Название модуля, например «Формулы — механика»"
+          placeholder={t("Название модуля, например «Формулы — механика»")}
           className="w-full rounded-card border border-line px-3 py-2 text-sm mb-4"
         />
 
@@ -436,20 +437,20 @@ function CreateSetModal({
               <input
                 value={row.front}
                 onChange={(e) => updateRow(i, "front", e.target.value)}
-                placeholder="Термин"
+                placeholder={t("Термин")}
                 className="flex-1 rounded-card border border-line px-3 py-2 text-sm"
               />
               <input
                 value={row.back}
                 onChange={(e) => updateRow(i, "back", e.target.value)}
-                placeholder="Определение"
+                placeholder={t("Определение")}
                 className="flex-1 rounded-card border border-line px-3 py-2 text-sm"
               />
               <button
                 onClick={() => removeRow(i)}
                 disabled={rows.length <= 1}
                 className="text-ink/30 hover:text-coral text-sm mt-2 disabled:opacity-0"
-                aria-label="Удалить карточку"
+                aria-label={t("Удалить карточку")}
               >
                 <Icon name="close" size={16} />
               </button>
@@ -458,21 +459,21 @@ function CreateSetModal({
         </div>
 
         <button onClick={addRow} className="text-sm text-ink/60 hover:text-ink mb-4">
-          + Добавить карточку
+          {t("+ Добавить карточку")}
         </button>
 
         {createError && <p className="text-xs text-coral mb-3">{createError}</p>}
 
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className="px-4 py-2 text-sm text-ink/60 hover:text-ink">
-            Отмена
+            {t("Отмена")}
           </button>
           <button
             onClick={handleCreate}
             disabled={!canCreate || creating}
             className="px-4 py-2 text-sm rounded-card bg-ink text-white hover:bg-ink/90 disabled:opacity-40"
           >
-            {creating ? (editSet ? "Сохраняем…" : "Создаём…") : editSet ? "Сохранить" : "Создать модуль"}
+            {creating ? (editSet ? t("Сохраняем…") : t("Создаём…")) : editSet ? t("Сохранить") : t("Создать модуль")}
           </button>
         </div>
       </div>
@@ -482,8 +483,5 @@ function CreateSetModal({
 
 // 1 карточка, 2 карточки, 5 карточек
 function cardsWord(n: number): string {
-  const d = n % 10, dd = n % 100;
-  if (d === 1 && dd !== 11) return "карточка";
-  if (d >= 2 && d <= 4 && (dd < 12 || dd > 14)) return "карточки";
-  return "карточек";
+  return plural(n, "карточка", "карточки", "карточек");
 }

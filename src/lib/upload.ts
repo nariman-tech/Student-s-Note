@@ -8,6 +8,7 @@
 
 import { supabase } from "./supabase";
 
+import { t } from "./i18n";
 const BUCKET = "uploads";
 const SUPABASE_FILES = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/${BUCKET}/`;
 // Адрес Worker для Backblaze B2 (без «/» в конце) или пусто — тогда всё в Supabase Storage
@@ -22,7 +23,7 @@ const PHOTO_QUALITY = 0.8;
 
 async function currentUserId(): Promise<string> {
   const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) throw new Error("Не авторизованы");
+  if (error || !data.user) throw new Error(t("Не авторизованы"));
   return data.user.id;
 }
 
@@ -38,18 +39,18 @@ function extFromMime(mime: string): string {
 }
 
 async function uploadBlob(blob: Blob, contentType: string): Promise<string> {
-  if (blob.size > MAX_FILE_BYTES) throw new Error("Файл больше 20 МБ — выберите файл поменьше");
+  if (blob.size > MAX_FILE_BYTES) throw new Error(t("Файл больше 20 МБ — выберите файл поменьше"));
   if (WORKER) return uploadViaWorker(blob, contentType);
   const userId = await currentUserId();
   const path = `${userId}/${crypto.randomUUID()}.${extFromMime(contentType)}`;
   const { error } = await supabase.storage.from(BUCKET).upload(path, blob, { contentType, cacheControl: "31536000" });
-  if (error) throw new Error(`Не получилось загрузить файл: ${error.message}`);
+  if (error) throw new Error(t("Не получилось загрузить файл: {0}", [error.message]));
   return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 }
 
 async function accessToken(): Promise<string> {
   const { data } = await supabase.auth.getSession();
-  if (!data.session) throw new Error("Не авторизованы");
+  if (!data.session) throw new Error(t("Не авторизованы"));
   return data.session.access_token;
 }
 
@@ -66,7 +67,7 @@ async function uploadViaWorker(blob: Blob, contentType: string): Promise<string>
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || typeof data.url !== "string") {
-    throw new Error(`Не получилось загрузить файл: ${data.error ?? res.status}`);
+    throw new Error(t("Не получилось загрузить файл: {0}", [data.error ?? res.status]));
   }
   return data.url;
 }
@@ -106,7 +107,7 @@ export async function uploadFile(file: File): Promise<string> {
 export async function uploadCanvas(canvas: HTMLCanvasElement): Promise<string> {
   // Рисунок поверх конспекта — тонкие линии и текст, поэтому качество чуть выше, чем у фото
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.85));
-  if (!blob) throw new Error("Не получилось сохранить рисунок");
+  if (!blob) throw new Error(t("Не получилось сохранить рисунок"));
   return uploadBlob(blob, blob.type);
 }
 
@@ -148,9 +149,9 @@ export function isUploadedFileUrl(url: unknown): url is string {
 }
 
 export function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} Б`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} КБ`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} МБ`;
+  if (bytes < 1024) return t("{0} Б", [bytes]);
+  if (bytes < 1024 * 1024) return t("{0} КБ", [Math.round(bytes / 1024)]);
+  return t("{0} МБ", [(bytes / 1024 / 1024).toFixed(1)]);
 }
 
 // Фото или файл для чата группы: фото сжимаются так же, как в конспектах, файлы грузятся как есть.

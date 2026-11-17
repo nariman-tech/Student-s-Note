@@ -1,11 +1,12 @@
 import { useState } from "react";
 
+import { t } from "../lib/i18n";
 // Подтверждение опасного действия (удаление и т.п.) в стиле приложения — вместо window.confirm,
 // который выглядит по-разному в браузерах и в окне Tauri
 export default function ConfirmDialog({
   title,
   text,
-  confirmLabel = "Удалить",
+  confirmLabel = t("Удалить"),
   onConfirm,
   onClose,
 }: {
@@ -25,7 +26,7 @@ export default function ConfirmDialog({
       await onConfirm();
       onClose();
     } catch (err: any) {
-      setError(err?.message ?? "Не получилось. Попробуйте ещё раз.");
+      setError(err?.message ?? t("Не получилось. Попробуйте ещё раз."));
       setBusy(false);
     }
   }
@@ -38,14 +39,14 @@ export default function ConfirmDialog({
         {error && <p className="text-xs text-coral mb-3">{error}</p>}
         <div className="flex justify-end gap-2">
           <button onClick={onClose} disabled={busy} className="px-4 py-2 text-sm text-ink/60 hover:text-ink">
-            Отмена
+            {t("Отмена")}
           </button>
           <button
             onClick={handleConfirm}
             disabled={busy}
             className="px-4 py-2 text-sm rounded-card bg-coral text-white font-medium hover:brightness-95 disabled:opacity-50"
           >
-            {busy ? "Секунду…" : confirmLabel}
+            {busy ? t("Секунду…") : confirmLabel}
           </button>
         </div>
       </div>

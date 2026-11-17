@@ -22,8 +22,8 @@ const Settings = lazy(() => import("./pages/Settings"));
 const PublicNotebookView = lazy(() => import("./pages/PublicView").then((m) => ({ default: m.PublicNotebookView })));
 const PublicFlashcardsView = lazy(() => import("./pages/PublicView").then((m) => ({ default: m.PublicFlashcardsView })));
 
-const pageLoading = <div className="p-8 text-sm text-ink/40">Загрузка…</div>;
-const screenLoading = <div className="min-h-screen flex items-center justify-center text-sm text-ink/40">Загрузка…</div>;
+const pageLoading = <div className="p-8 text-sm text-ink/40">{t("Загрузка…")}</div>;
+const screenLoading = <div className="min-h-screen flex items-center justify-center text-sm text-ink/40">{t("Загрузка…")}</div>;
 import { getSession, onAuthStateChange, ensureProfile } from "./lib/auth";
 import { getMyPublicProfile, syncPendingSaves } from "./lib/store";
 import { setOfflineUser } from "./lib/offline";
@@ -37,6 +37,7 @@ let appOpenTracked = false;
 import type { Session } from "@supabase/supabase-js";
 import { PublicProfile } from "./types";
 
+import { t } from "./lib/i18n";
 function AppShell({ profile, onProfileChange }: { profile: PublicProfile; onProfileChange: (p: PublicProfile) => void }) {
   useEffect(() => {
     if (appOpenTracked) return;
@@ -143,7 +144,7 @@ export default function App() {
   }
 
   if (session === undefined) {
-    return <div className="min-h-screen flex items-center justify-center text-sm text-ink/40">Загрузка…</div>;
+    return <div className="min-h-screen flex items-center justify-center text-sm text-ink/40">{t("Загрузка…")}</div>;
   }
   if (!session) {
     rememberInviteRoute(location.pathname);
@@ -157,7 +158,7 @@ export default function App() {
     );
   }
   if (profile === undefined) {
-    return <div className="min-h-screen flex items-center justify-center text-sm text-ink/40">Загрузка…</div>;
+    return <div className="min-h-screen flex items-center justify-center text-sm text-ink/40">{t("Загрузка…")}</div>;
   }
   if (profile === null) {
     return (

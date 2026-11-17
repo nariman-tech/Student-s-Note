@@ -14,6 +14,7 @@ import { useOnline } from "../lib/offline";
 import Icon from "../components/Icon";
 import { PublicProfile } from "../types";
 
+import { t } from "../lib/i18n";
 // «Люди» — все пользователи Lectiva: список с поиском по нику или ID, кнопка «Обновить»,
 // и прямо в строке — добавить в друзья, отменить заявку или принять входящую
 export default function People() {
@@ -43,7 +44,7 @@ export default function People() {
       setTotal(count);
       setRelations(rel);
     } catch (err: any) {
-      if (no === requestNo.current) setError(err?.message ?? "Не получилось загрузить список");
+      if (no === requestNo.current) setError(err?.message ?? t("Не получилось загрузить список"));
     } finally {
       if (no === requestNo.current) {
         setLoading(false);
@@ -64,7 +65,7 @@ export default function People() {
       const { people: more } = await listPeople(query, people.length);
       setPeople((prev) => [...prev, ...more.filter((p) => !prev.some((x) => x.id === p.id))]);
     } catch (err: any) {
-      setError(err?.message ?? "Не получилось загрузить ещё");
+      setError(err?.message ?? t("Не получилось загрузить ещё"));
     } finally {
       setLoadingMore(false);
     }
@@ -87,17 +88,17 @@ export default function People() {
     <div className="px-4 py-6 md:px-10 md:py-10 max-w-2xl mx-auto">
       <div className="flex items-end justify-between gap-3 mb-6">
         <div>
-          <h2 className="text-3xl md:text-4xl font-display font-800">Люди</h2>
-          <p className="text-sm text-ink/50 mt-1">Все, кто учится в Lectiva</p>
+          <h2 className="text-3xl md:text-4xl font-display font-800">{t("Люди")}</h2>
+          <p className="text-sm text-ink/50 mt-1">{t("Все, кто учится в Lectiva")}</p>
         </div>
         <button
           onClick={() => load(query, "refresh")}
           disabled={refreshing || loading || !online}
           className="shrink-0 flex items-center gap-2 rounded-card border border-line bg-card px-3.5 py-2.5 text-sm font-medium hover:border-ink/40 disabled:opacity-50"
-          title="Обновить список"
+          title={t("Обновить список")}
         >
           <Icon name="refresh" size={16} className={refreshing ? "animate-spin" : ""} />
-          <span className="hidden sm:inline">{refreshing ? "Обновляем…" : "Обновить"}</span>
+          <span className="hidden sm:inline">{refreshing ? t("Обновляем…") : t("Обновить")}</span>
         </button>
       </div>
 
@@ -107,7 +108,7 @@ export default function People() {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Ник или ID из 8 цифр"
+          placeholder={t("Ник или ID из 8 цифр")}
           className="w-full rounded-card border border-line pl-10 pr-10 py-3 text-sm"
           autoComplete="off"
         />
@@ -115,15 +116,15 @@ export default function People() {
           <button
             onClick={() => setQuery("")}
             className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full text-ink/40 hover:text-ink hover:bg-paper"
-            aria-label="Очистить поиск"
+            aria-label={t("Очистить поиск")}
           >
             <Icon name="close" size={16} />
           </button>
         )}
       </div>
 
-      {!online && <p className="text-xs text-ink/50 mb-4">Нет интернета — показан последний сохранённый список, поиск недоступен.</p>}
-      {idIncomplete && <p className="text-xs text-ink/50 mb-4">ID состоит из 8 цифр — введите его полностью.</p>}
+      {!online && <p className="text-xs text-ink/50 mb-4">{t("Нет интернета — показан последний сохранённый список, поиск недоступен.")}</p>}
+      {idIncomplete && <p className="text-xs text-ink/50 mb-4">{t("ID состоит из 8 цифр — введите его полностью.")}</p>}
       {error && <p className="text-sm text-coral mb-4">{error}</p>}
 
       {loading ? (
@@ -136,9 +137,9 @@ export default function People() {
         !error &&
         !idIncomplete && (
           <div className="text-center py-12">
-            <p className="font-display font-700">{query.trim() ? "Никого не нашли" : "Пока здесь только вы"}</p>
+            <p className="font-display font-700">{query.trim() ? t("Никого не нашли") : t("Пока здесь только вы")}</p>
             <p className="text-sm text-ink/50 mt-1">
-              {query.trim() ? "Проверьте ник или ID — ник пишется латиницей" : "Позовите одногруппников — они появятся здесь"}
+              {query.trim() ? t("Проверьте ник или ID — ник пишется латиницей") : t("Позовите одногруппников — они появятся здесь")}
             </p>
           </div>
         )
@@ -156,7 +157,7 @@ export default function People() {
           disabled={loadingMore}
           className="w-full mt-4 rounded-card border border-line bg-card py-2.5 text-sm font-medium hover:border-ink/40 disabled:opacity-50"
         >
-          {loadingMore ? "Загружаем…" : `Показать ещё ${Math.min(PEOPLE_PAGE, (total ?? 0) - people.length)}`}
+          {loadingMore ? t("Загружаем…") : t("Показать ещё {0}", [Math.min(PEOPLE_PAGE, (total ?? 0) - people.length)])}
         </button>
       )}
     </div>
@@ -184,7 +185,7 @@ function PersonRow({
     } catch (err: any) {
       // Заявку уже отправили (например, с другого устройства) — показываем как отправленную
       if (err?.code === "23505") onChange({ kind: "outgoing", requestId: "" });
-      else setError(err?.message ?? "Не получилось");
+      else setError(err?.message ?? t("Не получилось"));
     } finally {
       setBusy(false);
     }
@@ -212,18 +213,18 @@ function PersonRow({
       {relation?.kind === "friend" ? (
         <span className="shrink-0 flex items-center gap-1.5 text-xs font-semibold text-sage bg-sage/10 rounded-full px-3 py-1.5">
           <Icon name="check" size={14} />
-          В друзьях
+          {t("В друзьях")}
         </span>
       ) : relation?.kind === "outgoing" ? (
         <button
           onClick={cancel}
           disabled={busy}
           className="shrink-0 text-xs font-medium rounded-card border border-line px-3 py-2 text-ink/60 hover:text-ink hover:border-ink/40 disabled:opacity-50"
-          title="Отменить заявку"
+          title={t("Отменить заявку")}
         >
           {busy ? "…" : (
             <span className="flex items-center gap-1">
-              Заявка отправлена
+              {t("Заявка отправлена")}
               <Icon name="close" size={13} />
             </span>
           )}
@@ -234,7 +235,7 @@ function PersonRow({
           disabled={busy}
           className="shrink-0 text-xs font-semibold rounded-card bg-sage text-white px-3 py-2 hover:brightness-95 disabled:opacity-50"
         >
-          {busy ? "…" : "Принять заявку"}
+          {busy ? "…" : t("Принять заявку")}
         </button>
       ) : (
         <button
@@ -243,7 +244,7 @@ function PersonRow({
           className="shrink-0 flex items-center gap-1 text-xs font-semibold rounded-card bg-ink text-white px-3 py-2 hover:bg-ink/90 disabled:opacity-50"
         >
           <Icon name="plus" size={14} />
-          {busy ? "…" : "В друзья"}
+          {busy ? "…" : t("В друзья")}
         </button>
       )}
     </li>

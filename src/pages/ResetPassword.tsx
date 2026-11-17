@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { setNewPassword, authErrorMessage } from "../lib/auth";
 
+import { t } from "../lib/i18n";
 // Экран после перехода по ссылке «сбросить пароль» из письма: Supabase уже впустил пользователя
 // по этой ссылке, осталось задать новый пароль
 export default function ResetPassword({ onDone }: { onDone: () => void }) {
@@ -12,11 +13,11 @@ export default function ResetPassword({ onDone }: { onDone: () => void }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (password.length < 6) {
-      setError("Минимум 6 символов.");
+      setError(t("Минимум 6 символов."));
       return;
     }
     if (password !== repeat) {
-      setError("Пароли не совпадают.");
+      setError(t("Пароли не совпадают."));
       return;
     }
     setSaving(true);
@@ -33,8 +34,8 @@ export default function ResetPassword({ onDone }: { onDone: () => void }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-paper">
       <form onSubmit={handleSubmit} className="w-full max-w-sm p-8 rounded-card border border-line bg-card">
-        <h2 className="font-display font-800 text-lg mb-1">Новый пароль</h2>
-        <p className="text-sm text-ink/50 mb-5">Придумайте новый пароль для входа в Lectiva.</p>
+        <h2 className="font-display font-800 text-lg mb-1">{t("Новый пароль")}</h2>
+        <p className="text-sm text-ink/50 mb-5">{t("Придумайте новый пароль для входа в Lectiva.")}</p>
         <input
           type="password"
           autoFocus
@@ -42,7 +43,7 @@ export default function ResetPassword({ onDone }: { onDone: () => void }) {
           minLength={6}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Новый пароль"
+          placeholder={t("Новый пароль")}
           autoComplete="new-password"
           className="w-full rounded-card border border-line px-3 py-2.5 text-sm mb-3"
         />
@@ -52,7 +53,7 @@ export default function ResetPassword({ onDone }: { onDone: () => void }) {
           minLength={6}
           value={repeat}
           onChange={(e) => setRepeat(e.target.value)}
-          placeholder="Повторите пароль"
+          placeholder={t("Повторите пароль")}
           autoComplete="new-password"
           className="w-full rounded-card border border-line px-3 py-2.5 text-sm mb-3"
         />
@@ -62,7 +63,7 @@ export default function ResetPassword({ onDone }: { onDone: () => void }) {
           disabled={saving}
           className="w-full rounded-card bg-ink text-white py-2.5 text-sm font-medium hover:bg-ink/90 disabled:opacity-50"
         >
-          {saving ? "Сохраняем…" : "Сохранить и войти"}
+          {saving ? t("Сохраняем…") : t("Сохранить и войти")}
         </button>
       </form>
     </div>

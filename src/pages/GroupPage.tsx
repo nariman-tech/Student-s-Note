@@ -32,10 +32,11 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import { Friend, Group, GroupMember, GroupMessage, Notebook, PublicProfile } from "../types";
 import NotebookCard from "../components/NotebookCard";
 
+import { t, plural, LOCALE } from "../lib/i18n";
 const MAX_MESSAGE_LENGTH = 4000; // совпадает с проверкой в базе
 
 function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit" });
 }
 
 function formatDay(iso: string): string {
@@ -43,9 +44,9 @@ function formatDay(iso: string): string {
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
-  if (d.toDateString() === today.toDateString()) return "Сегодня";
-  if (d.toDateString() === yesterday.toDateString()) return "Вчера";
-  return d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: d.getFullYear() === today.getFullYear() ? undefined : "numeric" });
+  if (d.toDateString() === today.toDateString()) return t("Сегодня");
+  if (d.toDateString() === yesterday.toDateString()) return t("Вчера");
+  return d.toLocaleDateString(LOCALE, { day: "numeric", month: "long", year: d.getFullYear() === today.getFullYear() ? undefined : "numeric" });
 }
 
 export default function GroupPage() {
@@ -183,7 +184,7 @@ export default function GroupPage() {
       await pinGroupMessage(group.id, messageId);
     } catch (err: any) {
       setGroup((g) => (g ? { ...g, ...before } : g));
-      setPinError(err?.message ?? "Не получилось закрепить");
+      setPinError(err?.message ?? t("Не получилось закрепить"));
     }
   }
 
@@ -279,15 +280,15 @@ export default function GroupPage() {
   if (notFound) {
     return (
       <div className="p-8">
-        <p className="mb-3">Группа не найдена — возможно, её удалили или вас исключили.</p>
+        <p className="mb-3">{t("Группа не найдена — возможно, её удалили или вас исключили.")}</p>
         <Link to="/groups" className="text-sm text-ink/60 hover:text-ink">
-          <Icon name="arrowLeft" size={13} className="inline -mt-0.5 mr-1" />Все группы
+          <Icon name="arrowLeft" size={13} className="inline -mt-0.5 mr-1" />{t("Все группы")}
         </Link>
       </div>
     );
   }
   if (!group) {
-    return <div className="p-8 text-sm text-ink/40">Загрузка…</div>;
+    return <div className="p-8 text-sm text-ink/40">{t("Загрузка…")}</div>;
   }
 
   const isOwner = group.ownerId === me;
@@ -298,13 +299,13 @@ export default function GroupPage() {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-3 md:mb-4">
         <div className="min-w-0">
           <Link to="/groups" className="text-xs text-ink/50 hover:text-ink">
-            <Icon name="arrowLeft" size={13} className="inline -mt-0.5 mr-1" />Все группы
+            <Icon name="arrowLeft" size={13} className="inline -mt-0.5 mr-1" />{t("Все группы")}
           </Link>
           <h2 className="text-xl font-display font-800 truncate">{group.name}</h2>
           <p className="text-xs text-ink/50">
             {group.university ? `${group.university} · ` : ""}
             <button onClick={() => setMembersOpen(true)} className="underline hover:text-ink">
-              участники: {members.length || group.memberCount /* пока список участников грузится */}
+              {t("участники:")}{" "}{members.length || group.memberCount /* пока список участников грузится */}
             </button>
           </p>
         </div>
@@ -313,14 +314,14 @@ export default function GroupPage() {
             onClick={() => setInviteOpen(true)}
             className="text-xs rounded-card bg-ink text-white px-3 py-2 font-medium hover:bg-ink/90 flex items-center gap-1.5"
           >
-            <Icon name="userPlus" size={14} /> Пригласить
+            <Icon name="userPlus" size={14} /> {t("Пригласить")}
           </button>
           <button
             onClick={handleCopyCode}
             className="text-xs rounded-card border border-line px-3 py-2 hover:border-ink/40 flex items-center gap-1.5"
-            title="Код для вступления — отправьте его одногруппникам"
+            title={t("Код для вступления — отправьте его одногруппникам")}
           >
-            Код: <span className="font-mono font-semibold tracking-wider">{group.inviteCode}</span>
+            {t("Код:")}{" "}<span className="font-mono font-semibold tracking-wider">{group.inviteCode}</span>
             <Icon name={codeCopied ? "check" : "copy"} size={13} className={codeCopied ? "text-sage" : "text-ink/50"} />
           </button>
           <button
@@ -328,15 +329,15 @@ export default function GroupPage() {
             className="text-xs rounded-card border border-line px-3 py-2 hover:border-coral hover:text-coral flex items-center gap-1.5"
           >
             <Icon name={isOwner ? "trash" : "logout"} size={13} />
-            {isOwner ? "Удалить группу" : "Выйти"}
+            {isOwner ? t("Удалить группу") : t("Выйти")}
           </button>
         </div>
       </div>
 
-      <div className="flex gap-1 mb-2" role="tablist" aria-label="Разделы группы">
+      <div className="flex gap-1 mb-2" role="tablist" aria-label={t("Разделы группы")}>
         {[
-          { key: "chat", label: "Чат", icon: "chat" as const },
-          { key: "notebooks", label: "Тетради группы", icon: "notebooks" as const },
+          { key: "chat", label: t("Чат"), icon: "chat" as const },
+          { key: "notebooks", label: t("Тетради группы"), icon: "notebooks" as const },
         ].map((t) => (
           <button
             key={t.key}
@@ -365,23 +366,23 @@ export default function GroupPage() {
           <button
             onClick={() => jumpTo(pinned.id)}
             className="flex-1 min-w-0 flex items-center gap-2.5 px-3 py-2 text-left hover:bg-paper/60"
-            title="Перейти к сообщению"
+            title={t("Перейти к сообщению")}
           >
             <Icon name="pin" size={16} className="text-ink/50 shrink-0" />
             <span className="min-w-0">
               <span className="block text-[11px] font-semibold text-ink/60">
-                Закреплено{pinned.authorId && profilesById[pinned.authorId] ? `, @${profilesById[pinned.authorId].username}` : ""}
+                {t("Закреплено")}{pinned.authorId && profilesById[pinned.authorId] ? `, @${profilesById[pinned.authorId].username}` : ""}
               </span>
               <span className="block text-sm truncate">
-                {pinned.body || (pinned.attachment?.type === "image" ? "Фото" : pinned.attachment?.name ?? "Вложение")}
+                {pinned.body || (pinned.attachment?.type === "image" ? t("Фото") : pinned.attachment?.name ?? t("Вложение"))}
               </span>
             </span>
           </button>
           <button
             onClick={() => handlePin(null)}
             className="px-3 text-ink/35 hover:text-coral shrink-0"
-            title="Открепить"
-            aria-label="Открепить сообщение"
+            title={t("Открепить")}
+            aria-label={t("Открепить сообщение")}
           >
             <Icon name="close" size={16} />
           </button>
@@ -399,13 +400,13 @@ export default function GroupPage() {
         {hasOlder && (
           <div className="text-center mb-3">
             <button onClick={loadOlder} disabled={loadingOlder} className="text-xs text-ink/50 hover:text-ink">
-              {loadingOlder ? "Загружаем…" : "Показать более ранние сообщения"}
+              {loadingOlder ? t("Загружаем…") : t("Показать более ранние сообщения")}
             </button>
           </div>
         )}
         {messages.length === 0 ? (
           <div className="h-full flex items-center justify-center text-sm text-ink/40 text-center">
-            Здесь пока пусто. Напишите первое сообщение или отправьте фото доски
+            {t("Здесь пока пусто. Напишите первое сообщение или отправьте фото доски")}
           </div>
         ) : (
           messages.map((m, i) => {
@@ -421,7 +422,7 @@ export default function GroupPage() {
                 {m.id === firstUnreadId && (
                   <div id="unread-divider" className="flex items-center gap-3 my-3" role="separator">
                     <span className="flex-1 h-px bg-coral/40" />
-                    <span className="text-[11px] font-semibold text-coral">Новые сообщения</span>
+                    <span className="text-[11px] font-semibold text-coral">{t("Новые сообщения")}</span>
                     <span className="flex-1 h-px bg-coral/40" />
                   </div>
                 )}
@@ -452,7 +453,7 @@ export default function GroupPage() {
           onClick={scrollToBottom}
           className="absolute right-3 bottom-3 flex items-center gap-1.5 rounded-full bg-ink text-white text-xs font-semibold pl-3 pr-2.5 py-2 shadow-pop"
         >
-          {newBelow > 99 ? "99+" : newBelow} {newBelow % 10 === 1 && newBelow % 100 !== 11 ? "новое" : "новых"}
+          {newBelow > 99 ? "99+" : newBelow} {plural(newBelow, "новое", "новых", "новых")}
           <Icon name="arrowDown" size={14} />
         </button>
       )}
@@ -488,9 +489,9 @@ export default function GroupPage() {
       )}
       {confirm === "leave" && (
         <ConfirmDialog
-          title="Выйти из группы?"
-          text={`Вы перестанете видеть чат «${group.name}». Вернуться можно по коду приглашения.`}
-          confirmLabel="Выйти"
+          title={t("Выйти из группы?")}
+          text={t("Вы перестанете видеть чат «{0}». Вернуться можно по коду приглашения.", [group.name])}
+          confirmLabel={t("Выйти")}
           onConfirm={async () => {
             await leaveGroup(group.id);
             navigate("/groups");
@@ -500,8 +501,8 @@ export default function GroupPage() {
       )}
       {confirm === "delete" && (
         <ConfirmDialog
-          title="Удалить группу?"
-          text={`«${group.name}» удалится у всех участников вместе с перепиской. Отменить это нельзя.`}
+          title={t("Удалить группу?")}
+          text={t("«{0}» удалится у всех участников вместе с перепиской. Отменить это нельзя.", [group.name])}
           onConfirm={async () => {
             await deleteGroup(group.id);
             navigate("/groups");
@@ -511,8 +512,8 @@ export default function GroupPage() {
       )}
       {deletingMessage && (
         <ConfirmDialog
-          title="Удалить сообщение?"
-          text="Сообщение пропадёт у всех участников группы."
+          title={t("Удалить сообщение?")}
+          text={t("Сообщение пропадёт у всех участников группы.")}
           onConfirm={async () => {
             await deleteGroupMessage(deletingMessage);
             setMessages((list) => list.filter((x) => x.id !== deletingMessage.id));
@@ -566,7 +567,7 @@ function MessageRow({
       <div className="w-8 shrink-0">{!grouped && !mine && <Avatar profile={author} />}</div>
       <div className={`max-w-[85%] md:max-w-[75%] flex flex-col ${mine ? "items-end" : "items-start"}`}>
         {!grouped && !mine && (
-          <span className="text-xs text-ink/50 mb-0.5">{author ? `@${author.username}` : "Удалённый пользователь"}</span>
+          <span className="text-xs text-ink/50 mb-0.5">{author ? `@${author.username}` : t("Удалённый пользователь")}</span>
         )}
         <div className={`flex items-end gap-1.5 ${mine ? "flex-row-reverse" : ""}`}>
           <div
@@ -604,8 +605,8 @@ function MessageRow({
             className={`md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 mb-1 ${
               pinned ? "text-ink/60 hover:text-coral" : "text-ink/30 hover:text-ink"
             }`}
-            title={pinned ? "Открепить" : "Закрепить для всех"}
-            aria-label={pinned ? "Открепить сообщение" : "Закрепить сообщение"}
+            title={pinned ? t("Открепить") : t("Закрепить для всех")}
+            aria-label={pinned ? t("Открепить сообщение") : t("Закрепить сообщение")}
           >
             <Icon name="pin" size={14} />
           </button>
@@ -613,8 +614,8 @@ function MessageRow({
             <button
               onClick={onDelete}
               className="md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 text-ink/30 hover:text-coral text-xs mb-1"
-              title="Удалить сообщение"
-              aria-label="Удалить сообщение"
+              title={t("Удалить сообщение")}
+              aria-label={t("Удалить сообщение")}
             >
               <Icon name="close" size={14} />
             </button>
@@ -660,7 +661,7 @@ function Composer({ groupId, onSent }: { groupId: string; onSent: (m: GroupMessa
       pickFile(null);
       textRef.current?.focus();
     } catch (err: any) {
-      setError(err?.message ?? "Не получилось отправить сообщение");
+      setError(err?.message ?? t("Не получилось отправить сообщение"));
     } finally {
       setSending(false);
     }
@@ -679,7 +680,7 @@ function Composer({ groupId, onSent }: { groupId: string; onSent: (m: GroupMessa
             <span className="block text-sm truncate">{file.name}</span>
             <span className="block text-xs text-ink/40">{formatFileSize(file.size)}</span>
           </span>
-          <button onClick={() => pickFile(null)} disabled={sending} className="text-ink/40 hover:text-coral px-2" aria-label="Убрать файл">
+          <button onClick={() => pickFile(null)} disabled={sending} className="text-ink/40 hover:text-coral px-2" aria-label={t("Убрать файл")}>
             <Icon name="close" size={16} />
           </button>
         </div>
@@ -690,8 +691,8 @@ function Composer({ groupId, onSent }: { groupId: string; onSent: (m: GroupMessa
           onClick={() => fileInputRef.current?.click()}
           disabled={sending}
           className="w-10 h-10 rounded-card border border-line hover:border-ink/40 flex items-center justify-center shrink-0"
-          title="Прикрепить фото или файл"
-          aria-label="Прикрепить фото или файл"
+          title={t("Прикрепить фото или файл")}
+          aria-label={t("Прикрепить фото или файл")}
         >
           <Icon name="paperclip" size={18} className="text-ink/60" />
         </button>
@@ -725,7 +726,7 @@ function Composer({ groupId, onSent }: { groupId: string; onSent: (m: GroupMessa
           }}
           rows={1}
           maxLength={MAX_MESSAGE_LENGTH}
-          placeholder="Сообщение…"
+          placeholder={t("Сообщение…")}
           className="flex-1 resize-none rounded-card border border-line px-3 py-2.5 text-sm max-h-40 outline-none focus:border-ink/40"
         />
         <button
@@ -733,11 +734,11 @@ function Composer({ groupId, onSent }: { groupId: string; onSent: (m: GroupMessa
           disabled={!canSend}
           className="h-10 px-4 rounded-card bg-ink text-white text-sm font-medium hover:bg-ink/90 disabled:opacity-40 shrink-0"
         >
-          {sending ? (file ? "Загружаем…" : "…") : "Отправить"}
+          {sending ? (file ? t("Загружаем…") : "…") : t("Отправить")}
         </button>
       </div>
       <p className="hidden md:block text-[11px] text-ink/35 mt-1 ml-12">
-        Enter — отправить, Shift+Enter — новая строка, Ctrl+V — вставить скриншот
+        {t("Enter — отправить, Shift+Enter — новая строка, Ctrl+V — вставить скриншот")}
       </p>
     </div>
   );
@@ -764,7 +765,7 @@ function MembersModal({
     <>
     <div className="fixed inset-0 bg-ink/40 flex items-center justify-center z-30 p-4" onClick={onClose}>
       <div className="bg-card rounded-card p-6 w-full max-w-sm max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <h3 className="font-display font-700 mb-4">Участники ({members.length})</h3>
+        <h3 className="font-display font-700 mb-4">{t("Участники (")}{members.length})</h3>
         <div className="flex flex-col gap-2">
           {members.map((m) => (
             <div key={m.profile.id} className="flex items-center gap-2.5">
@@ -772,18 +773,18 @@ function MembersModal({
               <span className="flex-1 min-w-0">
                 <span className="block text-sm truncate">
                   @{m.profile.username}
-                  {m.profile.id === me && <span className="text-ink/40"> (вы)</span>}
+                  {m.profile.id === me && <span className="text-ink/40"> {t("(вы)")}</span>}
                 </span>
                 <span className="block text-xs text-ink/40">
-                  {m.role === "owner" ? "Создатель · " : ""}ID {formatPublicId(m.profile.publicId)}
+                  {m.role === "owner" ? t("Создатель · ") : ""}ID {formatPublicId(m.profile.publicId)}
                 </span>
               </span>
               {isOwner && m.role !== "owner" && (
                 <button
                   onClick={() => setRemoving(m)}
                   className="text-xs text-ink/40 hover:text-coral px-2"
-                  title="Исключить из группы"
-                  aria-label={`Исключить @${m.profile.username}`}
+                  title={t("Исключить из группы")}
+                  aria-label={t("Исключить @{0}", [m.profile.username])}
                 >
                   <Icon name="close" size={14} />
                 </button>
@@ -792,15 +793,15 @@ function MembersModal({
           ))}
         </div>
         <button onClick={onClose} className="w-full text-center text-xs text-ink/50 hover:text-ink mt-5">
-          Закрыть
+          {t("Закрыть")}
         </button>
       </div>
     </div>
       {removing && (
         <ConfirmDialog
-          title="Исключить из группы?"
-          text={`@${removing.profile.username} больше не увидит чат. Вернуться он сможет только по коду приглашения.`}
-          confirmLabel="Исключить"
+          title={t("Исключить из группы?")}
+          text={t("@{0} больше не увидит чат. Вернуться он сможет только по коду приглашения.", [removing.profile.username])}
+          confirmLabel={t("Исключить")}
           onConfirm={async () => {
             await removeGroupMember(groupId, removing.profile.id);
             await onChanged();
@@ -833,7 +834,7 @@ function InviteModal({
   useEffect(() => {
     getFriends()
       .then(setFriends)
-      .catch((err) => setError(err?.message ?? "Не получилось загрузить друзей"))
+      .catch((err) => setError(err?.message ?? t("Не получилось загрузить друзей")))
       .finally(() => setLoading(false));
   }, []);
 
@@ -845,7 +846,7 @@ function InviteModal({
       setAdded((s) => new Set(s).add(friendId));
       await onAdded();
     } catch (err: any) {
-      setError(err?.message ?? "Не получилось добавить в группу");
+      setError(err?.message ?? t("Не получилось добавить в группу"));
     } finally {
       setBusyId(null);
     }
@@ -854,23 +855,23 @@ function InviteModal({
   return (
     <div className="fixed inset-0 bg-ink/40 flex items-center justify-center z-30 p-4" onClick={onClose}>
       <div className="bg-card rounded-card p-6 w-full max-w-sm max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <h3 className="font-display font-700 mb-1">Пригласить в группу</h3>
+        <h3 className="font-display font-700 mb-1">{t("Пригласить в группу")}</h3>
         <p className="text-xs text-ink/50 mb-4">«{group.name}»</p>
 
         {/* Сначала — мессенджеры: так зовут одногруппников, которых ещё нет в Lectiva */}
-        <p className="text-xs font-medium text-ink/40 mb-1">Отправить приглашение в мессенджер</p>
+        <p className="text-xs font-medium text-ink/40 mb-1">{t("Отправить приглашение в мессенджер")}</p>
         <p className="text-xs text-ink/50 mb-3">
-          Кто откроет ссылку, сразу вступит в группу (после входа в аккаунт). Или продиктуйте код:{" "}
+          {t("Кто откроет ссылку, сразу вступит в группу (после входа в аккаунт). Или продиктуйте код:")}{" "}
           <span className="font-mono font-semibold text-ink tracking-wider">{group.inviteCode}</span>
         </p>
-        <MessengerShare url={groupInviteLink(group.inviteCode)} text={`Вступай в нашу группу «${group.name}» в приложении Lectiva`} />
+        <MessengerShare url={groupInviteLink(group.inviteCode)} text={t("Вступай в нашу группу «{0}» в приложении Lectiva", [group.name])} />
 
-        <p className="text-xs font-medium text-ink/40 mb-1.5 mt-5 pt-4 border-t border-line">Или добавьте друзей из Lectiva</p>
+        <p className="text-xs font-medium text-ink/40 mb-1.5 mt-5 pt-4 border-t border-line">{t("Или добавьте друзей из Lectiva")}</p>
         {error && <p className="text-xs text-coral mb-2">{error}</p>}
         {loading ? (
-          <p className="text-sm text-ink/40 mb-4">Загрузка…</p>
+          <p className="text-sm text-ink/40 mb-4">{t("Загрузка…")}</p>
         ) : friends.length === 0 ? (
-          <p className="text-sm text-ink/50 mb-4">Пока нет друзей в Lectiva — отправьте ссылку выше.</p>
+          <p className="text-sm text-ink/50 mb-4">{t("Пока нет друзей в Lectiva — отправьте ссылку выше.")}</p>
         ) : (
           <div className="flex flex-col gap-1.5 mb-4">
             {friends.map((f) => {
@@ -884,7 +885,7 @@ function InviteModal({
                     disabled={inGroup || busyId === f.profile.id}
                     className="text-xs rounded-card bg-ink text-white px-2.5 py-1 hover:bg-ink/90 disabled:bg-sage/15 disabled:text-sage"
                   >
-                    {inGroup ? "В группе" : busyId === f.profile.id ? "…" : "Добавить"}
+                    {inGroup ? t("В группе") : busyId === f.profile.id ? "…" : t("Добавить")}
                   </button>
                 </div>
               );
@@ -894,7 +895,7 @@ function InviteModal({
 
 
         <button onClick={onClose} className="w-full text-center text-xs text-ink/50 hover:text-ink mt-4">
-          Готово
+          {t("Готово")}
         </button>
       </div>
     </div>
@@ -915,7 +916,7 @@ function GroupNotebooks({ group }: { group: Group }) {
   useEffect(() => {
     getGroupNotebooks(group.id)
       .then(setNotebooks)
-      .catch((err) => setError(err?.message ?? "Не получилось загрузить тетради группы"));
+      .catch((err) => setError(err?.message ?? t("Не получилось загрузить тетради группы")));
   }, [group.id]);
 
   async function handleCreate() {
@@ -931,7 +932,7 @@ function GroupNotebooks({ group }: { group: Group }) {
       track("group_notebook_created");
       navigate(`/notebook/${nb.id}`);
     } catch (err: any) {
-      setError(err?.message ?? "Не получилось создать тетрадь");
+      setError(err?.message ?? t("Не получилось создать тетрадь"));
       setBusy(false);
     }
   }
@@ -939,12 +940,12 @@ function GroupNotebooks({ group }: { group: Group }) {
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-        <p className="text-sm text-ink/50">Конспекты курса — читают и дописывают все участники группы</p>
+        <p className="text-sm text-ink/50">{t("Конспекты курса — читают и дописывают все участники группы")}</p>
         <button
           onClick={() => setCreating(true)}
           className="text-sm rounded-card bg-ink text-white px-4 py-2 font-medium hover:bg-ink/90"
         >
-          + Тетрадь группы
+          {t("+ Тетрадь группы")}
         </button>
       </div>
 
@@ -959,20 +960,20 @@ function GroupNotebooks({ group }: { group: Group }) {
               if (e.key === "Escape") setCreating(false);
             }}
             maxLength={120}
-            placeholder="Название, например «Матанализ — лекции»"
-            aria-label="Название тетради группы"
+            placeholder={t("Название, например «Матанализ — лекции»")}
+            aria-label={t("Название тетради группы")}
             className="flex-1 rounded-card border border-line px-3 py-2 text-sm"
           />
           <div className="flex gap-2">
             <button onClick={() => setCreating(false)} className="px-3 py-2 text-sm text-ink/60 hover:text-ink">
-              Отмена
+              {t("Отмена")}
             </button>
             <button
               onClick={handleCreate}
               disabled={!title.trim() || busy}
               className="px-4 py-2 text-sm rounded-card bg-ink text-white hover:bg-ink/90 disabled:opacity-40"
             >
-              {busy ? "Создаём…" : "Создать"}
+              {busy ? t("Создаём…") : t("Создать")}
             </button>
           </div>
         </div>
@@ -980,10 +981,10 @@ function GroupNotebooks({ group }: { group: Group }) {
 
       {error && <p className="text-sm text-coral mb-3">{error}</p>}
       {notebooks === null ? (
-        !error && <p className="text-sm text-ink/40">Загрузка…</p>
+        !error && <p className="text-sm text-ink/40">{t("Загрузка…")}</p>
       ) : notebooks.length === 0 ? (
         <p className="text-sm text-ink/50">
-          Пока нет общих тетрадей. Создайте тетрадь по предмету — одногруппники смогут дописывать в неё свои конспекты.
+          {t("Пока нет общих тетрадей. Создайте тетрадь по предмету — одногруппники смогут дописывать в неё свои конспекты.")}
         </p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-7">
