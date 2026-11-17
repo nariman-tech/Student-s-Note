@@ -6,6 +6,7 @@ import SearchBar from "../components/SearchBar";
 import { Notebook, SharedNotebook } from "../types";
 import Icon from "../components/Icon";
 
+import { t } from "../lib/i18n";
 const COLORS = ["#FF6B5B", "#8C8FE0", "#6B9080", "#FFC93C", "#5AA9E6"];
 
 export default function Notebooks() {
@@ -64,7 +65,7 @@ export default function Notebooks() {
       await load();
       resetModal();
     } catch (err: any) {
-      setCreateError(err?.message ?? "Не получилось создать тетрадь");
+      setCreateError(err?.message ?? t("Не получилось создать тетрадь"));
     } finally {
       setCreating(false);
     }
@@ -77,7 +78,7 @@ export default function Notebooks() {
       <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 gap-4">
         <div>
           <p className="text-sm text-ink/50">{greeting}</p>
-          <h2 className="text-3xl md:text-4xl font-display font-800 mt-0.5">Мои тетради</h2>
+          <h2 className="text-3xl md:text-4xl font-display font-800 mt-0.5">{t("Мои тетради")}</h2>
         </div>
         <SearchBar />
       </div>
@@ -99,10 +100,10 @@ export default function Notebooks() {
               <span className="w-11 h-11 rounded-full bg-highlight text-ink flex items-center justify-center shadow-lift">
                 <Icon name="plus" size={22} />
               </span>
-              <span className="text-sm font-semibold">Новая тетрадь</span>
+              <span className="text-sm font-semibold">{t("Новая тетрадь")}</span>
             </div>
             {notebooks.length === 0 && (
-              <p className="text-xs text-ink/45 mt-2.5 pl-1">Начните с первого предмета</p>
+              <p className="text-xs text-ink/45 mt-2.5 pl-1">{t("Начните с первого предмета")}</p>
             )}
           </button>
           {notebooks.map((nb) => (
@@ -113,8 +114,8 @@ export default function Notebooks() {
 
       {shared.length > 0 && (
         <section className="mt-14">
-          <h3 className="text-xl font-display font-800">Со мной поделились</h3>
-          <p className="text-sm text-ink/50 mt-1 mb-5">Тетради друзей — можно читать, но не менять</p>
+          <h3 className="text-xl font-display font-800">{t("Со мной поделились")}</h3>
+          <p className="text-sm text-ink/50 mt-1 mb-5">{t("Тетради друзей — можно читать, но не менять")}</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-5 gap-y-7">
             {shared.map((s) => (
               <NotebookCard key={s.notebook.id} notebook={s.notebook} ownerUsername={s.owner.username} />
@@ -126,7 +127,7 @@ export default function Notebooks() {
       {showNewModal && (
         <div className="fixed inset-0 bg-ink/40 flex items-center justify-center z-40 p-4" onClick={resetModal}>
           <div className="bg-card rounded-card p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-display font-700 mb-4">Новая тетрадь</h3>
+            <h3 className="font-display font-700 mb-4">{t("Новая тетрадь")}</h3>
 
             <input
               autoFocus
@@ -134,7 +135,7 @@ export default function Notebooks() {
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
               className="w-full rounded-card border border-line px-3 py-2 text-sm mb-3"
-              placeholder="Название тетради — придумайте своё"
+              placeholder={t("Название тетради — придумайте своё")}
             />
 
             <button
@@ -143,11 +144,11 @@ export default function Notebooks() {
               className="w-full h-28 rounded-card border-2 border-dashed border-line mb-1 overflow-hidden flex flex-col items-center justify-center gap-1 hover:border-ink/40"
             >
               {cover ? (
-                <img src={cover} alt="Обложка" className="w-full h-full object-cover" />
+                <img src={cover} alt={t("Обложка")} className="w-full h-full object-cover" />
               ) : (
                 <>
                   <Icon name="image" size={22} className="text-ink/40" />
-                  <span className="text-xs text-ink/50">Своя обложка (необязательно)</span>
+                  <span className="text-xs text-ink/50">{t("Своя обложка (необязательно)")}</span>
                 </>
               )}
             </button>
@@ -160,7 +161,7 @@ export default function Notebooks() {
                   setCoverFile(null);
                 }}
                 className="text-xs text-ink/50 hover:text-ink mb-3">
-                Убрать обложку
+                {t("Убрать обложку")}
               </button>
             )}
 
@@ -168,14 +169,14 @@ export default function Notebooks() {
 
             <div className="flex justify-end gap-2 mt-4">
               <button onClick={resetModal} className="px-4 py-2 text-sm text-ink/60 hover:text-ink">
-                Отмена
+                {t("Отмена")}
               </button>
               <button
                 onClick={handleCreate}
                 disabled={!title.trim() || creating}
                 className="px-4 py-2 text-sm rounded-card bg-ink text-white hover:bg-ink/90 disabled:opacity-40"
               >
-                {creating ? "Создаём…" : "Создать"}
+                {creating ? t("Создаём…") : t("Создать")}
               </button>
             </div>
           </div>
@@ -187,8 +188,8 @@ export default function Notebooks() {
 
 function greetingForNow(): string {
   const h = new Date().getHours();
-  if (h < 5) return "Доброй ночи";
-  if (h < 12) return "Доброе утро";
-  if (h < 18) return "Добрый день";
-  return "Добрый вечер";
+  if (h < 5) return t("Доброй ночи");
+  if (h < 12) return t("Доброе утро");
+  if (h < 18) return t("Добрый день");
+  return t("Добрый вечер");
 }

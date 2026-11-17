@@ -5,6 +5,7 @@ import { getFriends, formatPublicId } from "../lib/store";
 import { Friend } from "../types";
 import MessengerShare from "./MessengerShare";
 
+import { t } from "../lib/i18n";
 // "Поделиться" тетрадью или модулем флеш-карт: отмечаем друзей, которым он открыт.
 // Друг увидит его в разделе «Со мной поделились». Что именно открываем, задают loadShared/share/unshare.
 export interface ShareTarget {
@@ -39,7 +40,7 @@ export default function FriendsShareModal({ title, target, onClose }: { title: s
         setSharedWith(new Set(shares));
         setLinkToken(token);
       })
-      .catch((err) => setError(err?.message ?? "Не получилось загрузить друзей"))
+      .catch((err) => setError(err?.message ?? t("Не получилось загрузить друзей")))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -57,7 +58,7 @@ export default function FriendsShareModal({ title, target, onClose }: { title: s
         track("share_link_enabled");
       }
     } catch (err: any) {
-      setError(err?.message ?? "Не получилось изменить доступ по ссылке");
+      setError(err?.message ?? t("Не получилось изменить доступ по ссылке"));
     } finally {
       setLinkBusy(false);
     }
@@ -79,7 +80,7 @@ export default function FriendsShareModal({ title, target, onClose }: { title: s
         setSharedWith((s) => new Set(s).add(friendUserId));
       }
     } catch (err: any) {
-      setError(err?.message ?? "Не получилось изменить доступ");
+      setError(err?.message ?? t("Не получилось изменить доступ"));
     } finally {
       setBusyId(null);
     }
@@ -96,9 +97,9 @@ export default function FriendsShareModal({ title, target, onClose }: { title: s
         {error && <p className="text-xs text-coral mb-2">{error}</p>}
 
         {loading ? (
-          <p className="text-sm text-ink/40">Загрузка…</p>
+          <p className="text-sm text-ink/40">{t("Загрузка…")}</p>
         ) : friends.length === 0 ? (
-          <p className="text-sm text-ink/50">Пока нет друзей — добавьте их на странице «Друзья».</p>
+          <p className="text-sm text-ink/50">{t("Пока нет друзей — добавьте их на странице «Друзья».")}</p>
         ) : (
           <div className="flex flex-col gap-1.5">
             {friends.map((f) => {
@@ -126,10 +127,10 @@ export default function FriendsShareModal({ title, target, onClose }: { title: s
                   <span className={`text-xs ${shared ? "text-sage font-medium" : "text-ink/40"}`}>
                     {shared ? (
                       <span className="flex items-center gap-1">
-                        <Icon name="check" size={13} /> Открыта
+                        <Icon name="check" size={13} /> {t("Открыта")}
                       </span>
                     ) : (
-                      "Открыть"
+                      t("Открыть")
                     )}
                   </span>
                 </button>
@@ -142,9 +143,9 @@ export default function FriendsShareModal({ title, target, onClose }: { title: s
           <div className="mt-5 pt-4 border-t border-line">
             <div className="flex items-center justify-between gap-3 mb-3">
               <div>
-                <p className="text-sm font-medium">Доступ по ссылке</p>
+                <p className="text-sm font-medium">{t("Доступ по ссылке")}</p>
                 <p className="text-xs text-ink/50">
-                  {linkToken ? "Любой, у кого есть ссылка, может открыть — даже без аккаунта" : "Выключен — отправить в мессенджер можно после включения"}
+                  {linkToken ? t("Любой, у кого есть ссылка, может открыть — даже без аккаунта") : t("Выключен — отправить в мессенджер можно после включения")}
                 </p>
               </div>
               <button
@@ -152,7 +153,7 @@ export default function FriendsShareModal({ title, target, onClose }: { title: s
                 disabled={linkBusy}
                 role="switch"
                 aria-checked={!!linkToken}
-                aria-label="Доступ по ссылке"
+                aria-label={t("Доступ по ссылке")}
                 className={`relative w-11 h-6 rounded-full shrink-0 transition-colors disabled:opacity-50 ${linkToken ? "bg-sage" : "bg-line"}`}
               >
                 <span
@@ -165,7 +166,7 @@ export default function FriendsShareModal({ title, target, onClose }: { title: s
         )}
 
         <button onClick={onClose} className="w-full text-center text-xs text-ink/50 hover:text-ink mt-4">
-          Готово
+          {t("Готово")}
         </button>
       </div>
     </div>

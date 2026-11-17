@@ -34,12 +34,13 @@ import {
   SearchResult,
 } from "../types";
 
+import { t } from "./i18n";
 // id берём из сохранённой сессии, а не запросом к серверу (getUser) — так он есть и без интернета.
 // Доступ к данным всё равно проверяет база по токену (правила RLS)
 export async function currentUserId(): Promise<string> {
   const { data } = await supabase.auth.getSession();
   const id = data.session?.user.id;
-  if (!id) throw new Error("Не авторизованы");
+  if (!id) throw new Error(t("Не авторизованы"));
   setOfflineUser(id);
   return id;
 }
@@ -109,7 +110,7 @@ export async function addNotebook(input: {
     .single();
   if (error) throw error;
   // Первая страница — сразу вместе с тетрадью, чтобы в ней можно было начать писать
-  await createPage(data.id, "Страница 1", 0);
+  await createPage(data.id, t("Страница 1"), 0);
   return rowToNotebook(data);
 }
 
@@ -317,7 +318,7 @@ export async function reorderPages(pageIds: string[]) {
 // Страницу изменил кто-то другой (или вы в другой вкладке) с тех пор, как вы её открыли
 export class PageConflictError extends Error {
   constructor() {
-    super("Страницу только что изменил другой участник");
+    super(t("Страницу только что изменил другой участник"));
   }
 }
 
@@ -411,7 +412,7 @@ export function syncPendingSaves(): Promise<number> {
         } catch (err) {
           if (!(err instanceof PageConflictError)) throw err;
           const pages = await getPages(p.notebookId).catch(() => []);
-          const copy = await createPage(p.notebookId, `${p.title ?? "Страница"} (офлайн-копия)`, pages.length);
+          const copy = await createPage(p.notebookId, t("{0} (офлайн-копия)", [p.title ?? t("Страница")]), pages.length);
           await savePageToServer({ id: copy.id, notebookId: p.notebookId }, p.content, p.attachments as NoteAttachment[], null, true);
         }
         await dropPageSave(p.pageId);
@@ -647,7 +648,7 @@ export async function getGroupMessage(id: string): Promise<GroupMessage | undefi
 export async function pinGroupMessage(groupId: string, messageId: string | null) {
   const { error } = await supabase.rpc("pin_group_message", { gid: groupId, mid: messageId });
   if (error) {
-    if (error.code === "PGRST202") throw new Error("Закрепление ещё не включено на сервере (нужна migration_017_pins_unread.sql)");
+    if (error.code === "PGRST202") throw new Error(t("Закрепление ещё не включено на сервере (нужна migration_017_pins_unread.sql)"));
     throw error;
   }
 }
@@ -722,7 +723,7 @@ export async function addGroup(name: string, university?: string): Promise<Group
 export async function joinGroupByCode(code: string): Promise<string> {
   const { data, error } = await supabase.rpc("join_group_by_code", { code: code.trim() });
   if (error) {
-    if (error.code === "P0002") throw new Error("Группа с таким кодом не найдена — проверьте код");
+    if (error.code === "P0002") throw new Error(t("Группа с таким кодом не найдена — проверьте код"));
     throw error;
   }
   return data as string;
@@ -904,9 +905,9 @@ export function cleanUsername(raw: string): string {
 }
 
 export function profileErrorMessage(err: any): string {
-  if (err?.code === "23505") return "Этот юзернейм уже занят — придумайте другой";
-  if (err?.code === "23514") return "Юзернейм: только латинские буквы, цифры и _, до 30 символов";
-  return err?.message ?? "Не получилось сохранить профиль";
+  if (err?.code === "23505") return t("Этот юзернейм уже занят — придумайте другой");
+  if (err?.code === "23514") return t("Юзернейм: только латинские буквы, цифры и _, до 30 символов");
+  return err?.message ?? t("Не получилось сохранить профиль");
 }
 
 // Чужой публичный профиль — например, владельца тетради, которую открыли мне

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon";
 import { useOnline, usePendingCount } from "../lib/offline";
 
+import { t } from "../lib/i18n";
 // Значок «Без сети» в боковой панели (и компактный — в верхней полосе на телефоне).
 // Показывает и сколько правок ждут отправки
 export function OfflineBadge({ compact = false }: { compact?: boolean }) {
@@ -9,7 +10,7 @@ export function OfflineBadge({ compact = false }: { compact?: boolean }) {
   const pending = usePendingCount();
   if (online && pending === 0) return null;
 
-  const text = online ? `Отправляем правки: ${pending}` : pending > 0 ? `Без сети, не отправлено: ${pending}` : "Без сети";
+  const text = online ? t("Отправляем правки: {0}", [pending]) : pending > 0 ? t("Без сети, не отправлено: {0}", [pending]) : t("Без сети");
   if (compact) {
     return (
       <span
@@ -17,7 +18,7 @@ export function OfflineBadge({ compact = false }: { compact?: boolean }) {
         title={text}
       >
         <Icon name={online ? "cloud" : "offline"} size={14} />
-        {online ? pending : "Офлайн"}
+        {online ? pending : t("Офлайн")}
       </span>
     );
   }
@@ -26,7 +27,7 @@ export function OfflineBadge({ compact = false }: { compact?: boolean }) {
       <Icon name={online ? "cloud" : "offline"} size={16} className="shrink-0 mt-px" />
       <span>
         <span className="font-semibold block">{text}</span>
-        {!online && <span className="text-white/60">Конспекты открываются из сохранённых, правки отправятся сами</span>}
+        {!online && <span className="text-white/60">{t("Конспекты открываются из сохранённых, правки отправятся сами")}</span>}
       </span>
     </div>
   );
@@ -43,9 +44,9 @@ export function SyncToast() {
       first.current = false;
       if (online) return;
     }
-    setMessage(online ? "Интернет вернулся — сохраняем правки" : "Нет интернета — работаем офлайн");
-    const t = window.setTimeout(() => setMessage(null), 3500);
-    return () => window.clearTimeout(t);
+    setMessage(online ? t("Интернет вернулся — сохраняем правки") : t("Нет интернета — работаем офлайн"));
+    const timer = window.setTimeout(() => setMessage(null), 3500);
+    return () => window.clearTimeout(timer);
   }, [online]);
 
   if (!message) return null;

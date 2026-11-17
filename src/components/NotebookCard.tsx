@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Notebook } from "../types";
 
+import { t, LOCALE } from "../lib/i18n";
 // Карточка тетради — как настоящая тетрадь на полке: цветной корешок с прошивкой, обложка
 // и обрез страниц справа. Это главный «характер» интерфейса, остальное вокруг нарочно спокойное.
 // ownerUsername — для чужих тетрадей в разделе «Со мной поделились»
@@ -40,8 +41,8 @@ export default function NotebookCard({ notebook, ownerUsername }: { notebook: No
         </div>
       </div>
       <div className="mt-2.5 pl-1">
-        {ownerUsername && <p className="text-xs text-lavender font-semibold">от @{ownerUsername}</p>}
-        <p className="text-xs text-ink/45">Обновлено {formatDay(notebook.updatedAt)}</p>
+        {ownerUsername && <p className="text-xs text-lavender font-semibold">{t("от @")}{ownerUsername}</p>}
+        <p className="text-xs text-ink/45">{t("Обновлено")}{" "}{formatDay(notebook.updatedAt)}</p>
       </div>
     </Link>
   );
@@ -52,5 +53,5 @@ function formatDay(isoDay: string): string {
   const d = new Date(isoDay);
   if (Number.isNaN(d.getTime())) return isoDay;
   const sameYear = d.getFullYear() === new Date().getFullYear();
-  return d.toLocaleDateString("ru-RU", { day: "numeric", month: "short", ...(sameYear ? {} : { year: "numeric" }) });
+  return d.toLocaleDateString(LOCALE, { day: "numeric", month: "short", ...(sameYear ? {} : { year: "numeric" }) });
 }

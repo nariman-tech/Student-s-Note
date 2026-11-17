@@ -14,6 +14,7 @@
 
 import { useEffect, useState } from "react";
 
+import { t } from "./i18n";
 const DB_NAME = "lectiva-offline";
 const DB_VERSION = 1;
 const KV = "kv"; // кэш ответов: ключ → данные
@@ -79,13 +80,13 @@ export function isNetworkError(err: unknown): boolean {
 }
 
 export class OfflineError extends Error {
-  constructor(message = "Нет подключения к интернету — это действие доступно только онлайн") {
+  constructor(message = t("Нет подключения к интернету — это действие доступно только онлайн")) {
     super(message);
   }
 }
 
 export function requireOnline(what?: string) {
-  if (!isOnline()) throw new OfflineError(what ? `${what} — нужен интернет` : undefined);
+  if (!isOnline()) throw new OfflineError(what ? t("{0} — нужен интернет", [what]) : undefined);
 }
 
 export function useOnline(): boolean {
@@ -128,7 +129,7 @@ export async function cached<T>(key: string, load: () => Promise<T>): Promise<T>
   if (!isOnline()) {
     const saved = await kvGet<T>(fullKey);
     if (saved !== undefined) return saved;
-    throw new OfflineError("Эти данные ещё не сохранены для работы без интернета — откройте их один раз онлайн");
+    throw new OfflineError(t("Эти данные ещё не сохранены для работы без интернета — откройте их один раз онлайн"));
   }
   try {
     const fresh = await load();

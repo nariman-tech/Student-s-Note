@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import Icon from "../components/Icon";
+import LanguagePicker from "../components/LanguagePicker";
 import { pendingInviteKind } from "../lib/links";
 import { signInWithPassword, signInWithGoogle, sendPasswordReset, authErrorMessage } from "../lib/auth";
 
+import { t } from "../lib/i18n";
 // Вход: новые пользователи регистрируются только через Google (один клик, без фейковых почт и писем).
 // Вход по почте и паролю оставлен для уже существующих аккаунтов (в том числе тестовых) — спрятан за ссылкой.
 export default function Login() {
@@ -66,29 +68,30 @@ export default function Login() {
         </div>
         <div>
           <p className="font-display font-800 text-[2.75rem] leading-[1.05] tracking-tight max-w-md">
-            Все конспекты семестра на одной полке
+            {t("Все конспекты семестра на одной полке")}
           </p>
           <p className="text-white/60 mt-4 max-w-sm leading-relaxed">
-            Тетради по предметам, флеш-карты из выделенного текста и общие тетради с группой. Работает и без интернета.
+            {t("Тетради по предметам, флеш-карты из выделенного текста и общие тетради с группой. Работает и без интернета.")}
           </p>
         </div>
         <Shelf />
       </aside>
 
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="flex-1 flex items-center justify-center p-4 relative">
+      <LanguagePicker compact className="absolute top-4 right-4" />
       <div className="w-full max-w-sm p-8 rounded-2xl border border-line bg-card shadow-lift">
         <div className="text-center mb-7">
           <img src="/icons/icon-192.png" alt="" className="w-14 h-14 mx-auto mb-3 rounded-2xl lg:hidden" />
           <h1 className="font-display font-800 text-2xl">
             <span className="lg:hidden">Lectiva</span>
-            <span className="hidden lg:inline">Вход в Lectiva</span>
+            <span className="hidden lg:inline">{t("Вход в Lectiva")}</span>
           </h1>
-          <p className="text-sm text-ink/50 mt-1">Конспекты, флеш-карты и учёба вместе с группой</p>
+          <p className="text-sm text-ink/50 mt-1">{t("Конспекты, флеш-карты и учёба вместе с группой")}</p>
         </div>
 
         {invite && (
           <p className="text-sm text-center rounded-card bg-highlight/25 px-3 py-2.5 mb-5">
-            {invite === "group" ? "Вас пригласили в группу." : "Вас пригласили в друзья."} Войдите или создайте аккаунт — приглашение откроется сразу после входа.
+            {invite === "group" ? t("Вас пригласили в группу.") : t("Вас пригласили в друзья.")} {t("Войдите или создайте аккаунт — приглашение откроется сразу после входа.")}
           </p>
         )}
 
@@ -103,9 +106,9 @@ export default function Login() {
             <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z" />
             <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z" />
           </svg>
-          {googleLoading ? "Открываем Google…" : "Войти через Google"}
+          {googleLoading ? t("Открываем Google…") : t("Войти через Google")}
         </button>
-        <p className="text-center text-[11px] text-ink/40 mt-2">Нет аккаунта? Он создастся сам при первом входе</p>
+        <p className="text-center text-[11px] text-ink/40 mt-2">{t("Нет аккаунта? Он создастся сам при первом входе")}</p>
 
         {status === "error" && !emailOpen && <p className="text-xs text-coral text-center mt-3">{errorMsg}</p>}
 
@@ -117,7 +120,7 @@ export default function Login() {
             }}
             className="block mx-auto text-xs text-ink/50 hover:text-ink mt-6"
           >
-            Войти по почте и паролю
+            {t("Войти по почте и паролю")}
           </button>
         ) : forgotOpen ? (
           <div className="mt-6">
@@ -127,7 +130,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="mt-6">
             <div className="flex items-center gap-3 mb-4">
               <span className="flex-1 h-px bg-line" />
-              <span className="text-xs text-ink/40">вход по почте</span>
+              <span className="text-xs text-ink/40">{t("вход по почте")}</span>
               <span className="flex-1 h-px bg-line" />
             </div>
             <input
@@ -135,7 +138,7 @@ export default function Login() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Почта"
+              placeholder={t("Почта")}
               autoComplete="email"
               className="w-full rounded-card border border-line px-3 py-2.5 text-sm mb-3"
             />
@@ -145,7 +148,7 @@ export default function Login() {
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Пароль"
+              placeholder={t("Пароль")}
               autoComplete="current-password"
               className="w-full rounded-card border border-line px-3 py-2.5 text-sm mb-3"
             />
@@ -154,7 +157,7 @@ export default function Login() {
               disabled={status === "loading"}
               className="w-full rounded-card bg-ink text-white py-2.5 text-sm font-medium hover:bg-ink/90 disabled:opacity-50"
             >
-              {status === "loading" ? "Секунду…" : "Войти"}
+              {status === "loading" ? t("Секунду…") : t("Войти")}
             </button>
             {status === "error" && <p className="text-xs text-coral mt-2">{errorMsg}</p>}
             <div className="flex justify-between mt-3">
@@ -166,7 +169,7 @@ export default function Login() {
                 }}
                 className="text-xs text-ink/50 hover:text-ink"
               >
-                <Icon name="arrowLeft" size={12} className="inline -mt-0.5 mr-1" />Назад
+                <Icon name="arrowLeft" size={12} className="inline -mt-0.5 mr-1" />{t("Назад")}
               </button>
               <button
                 type="button"
@@ -176,7 +179,7 @@ export default function Login() {
                 }}
                 className="text-xs text-ink/50 hover:text-ink"
               >
-                Забыли пароль?
+                {t("Забыли пароль?")}
               </button>
             </div>
           </form>
@@ -184,7 +187,7 @@ export default function Login() {
 
         <p className="text-center text-[11px] text-ink/40 mt-6">
           <a href="/privacy" className="hover:text-ink underline">
-            Политика конфиденциальности
+            {t("Политика конфиденциальности")}
           </a>
         </p>
       </div>
@@ -196,12 +199,12 @@ export default function Login() {
 // Декоративная полка: корешки тетрадей разной высоты и цвета
 function Shelf() {
   const books = [
-    { h: 150, c: "#FF6B5B", t: "Матанализ" },
-    { h: 176, c: "#FFC93C", t: "История" },
-    { h: 132, c: "#8C8FE0", t: "Физика" },
-    { h: 164, c: "#6B9080", t: "Биология" },
+    { h: 150, c: "#FF6B5B", t: t("Матанализ") },
+    { h: 176, c: "#FFC93C", t: t("История") },
+    { h: 132, c: "#8C8FE0", t: t("Физика") },
+    { h: 164, c: "#6B9080", t: t("Биология") },
     { h: 144, c: "#5AA9E6", t: "English" },
-    { h: 120, c: "#F3F4F8", t: "Право" },
+    { h: 120, c: "#F3F4F8", t: t("Право") },
   ];
   return (
     <div aria-hidden>
@@ -250,11 +253,10 @@ function ForgotPassword({ initialEmail, onBack }: { initialEmail: string; onBack
     return (
       <div className="text-sm text-sage bg-sage/10 rounded-card p-3">
         <p>
-          Если аккаунт с почтой {email} существует, на неё придёт письмо со ссылкой для сброса пароля (проверьте и «Спам»).
-          Откройте ссылку — приложение попросит придумать новый пароль.
+          {t("Если аккаунт с почтой")}{" "}{email} {t("существует, на неё придёт письмо со ссылкой для сброса пароля (проверьте и «Спам»). Откройте ссылку — приложение попросит придумать новый пароль.")}
         </p>
         <button onClick={onBack} className="text-xs text-ink/60 hover:text-ink mt-3">
-          <Icon name="arrowLeft" size={12} className="inline -mt-0.5 mr-1" />Вернуться ко входу
+          <Icon name="arrowLeft" size={12} className="inline -mt-0.5 mr-1" />{t("Вернуться ко входу")}
         </button>
       </div>
     );
@@ -262,14 +264,14 @@ function ForgotPassword({ initialEmail, onBack }: { initialEmail: string; onBack
 
   return (
     <form onSubmit={handleSubmit}>
-      <p className="text-sm text-ink/60 mb-3">Введите почту — пришлём ссылку для сброса пароля.</p>
+      <p className="text-sm text-ink/60 mb-3">{t("Введите почту — пришлём ссылку для сброса пароля.")}</p>
       <input
         type="email"
         required
         autoFocus
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="Почта"
+        placeholder={t("Почта")}
         className="w-full rounded-card border border-line px-3 py-2.5 text-sm mb-3"
       />
       <button
@@ -277,11 +279,11 @@ function ForgotPassword({ initialEmail, onBack }: { initialEmail: string; onBack
         disabled={state === "sending"}
         className="w-full rounded-card bg-ink text-white py-2.5 text-sm font-medium hover:bg-ink/90 disabled:opacity-50"
       >
-        {state === "sending" ? "Отправляем…" : "Прислать ссылку"}
+        {state === "sending" ? t("Отправляем…") : t("Прислать ссылку")}
       </button>
       {error && <p className="text-xs text-coral mt-2">{error}</p>}
       <button type="button" onClick={onBack} className="block mx-auto text-xs text-ink/50 hover:text-ink mt-3">
-        <Icon name="arrowLeft" size={12} className="inline -mt-0.5 mr-1" />Вернуться ко входу
+        <Icon name="arrowLeft" size={12} className="inline -mt-0.5 mr-1" />{t("Вернуться ко входу")}
       </button>
     </form>
   );

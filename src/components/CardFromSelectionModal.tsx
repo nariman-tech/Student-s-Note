@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { track } from "../lib/analytics";
 import { addFlashcard, createFlashcardSet, getFlashcardSetTitles } from "../lib/store";
 
+import { t } from "../lib/i18n";
 // Делим выделенный текст на термин и определение по первому разделителю:
 // «Сила — векторная величина…», «Сила: векторная…», «Сила - векторная…».
 // Разделителя нет — весь текст идёт в термин, определение студент допишет сам.
@@ -44,7 +45,7 @@ export default function CardFromSelectionModal({
         const same = list.find((s) => s.title.trim().toLowerCase() === notebookTitle.trim().toLowerCase());
         if (same) setSetId(same.id);
       })
-      .catch((err) => setError(err?.message ?? "Не получилось загрузить модули"));
+      .catch((err) => setError(err?.message ?? t("Не получилось загрузить модули")));
   }, [notebookTitle]);
 
   const canSave = !saving && front.trim().length > 0 && back.trim().length > 0 && (setId !== NEW_SET || newSetTitle.trim().length > 0);
@@ -65,7 +66,7 @@ export default function CardFromSelectionModal({
       track("card_from_selection");
       onClose();
     } catch (err: any) {
-      setError(err?.message ?? "Не получилось сохранить карточку");
+      setError(err?.message ?? t("Не получилось сохранить карточку"));
     } finally {
       setSaving(false);
     }
@@ -74,11 +75,11 @@ export default function CardFromSelectionModal({
   return (
     <div className="fixed inset-0 bg-ink/40 flex items-center justify-center z-40 p-4" onClick={onClose}>
       <div className="bg-card rounded-card p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-        <h3 className="font-display font-700 mb-1">Новая карточка</h3>
-        <p className="text-xs text-ink/50 mb-4">Из выделенного текста. Проверьте и поправьте, если нужно.</p>
+        <h3 className="font-display font-700 mb-1">{t("Новая карточка")}</h3>
+        <p className="text-xs text-ink/50 mb-4">{t("Из выделенного текста. Проверьте и поправьте, если нужно.")}</p>
 
         <label className="text-xs text-ink/50 mb-1 block" htmlFor="card-front">
-          Термин (лицевая сторона)
+          {t("Термин (лицевая сторона)")}
         </label>
         <textarea
           id="card-front"
@@ -88,7 +89,7 @@ export default function CardFromSelectionModal({
           className="w-full rounded-card border border-line px-3 py-2 text-sm mb-3 resize-none"
         />
         <label className="text-xs text-ink/50 mb-1 block" htmlFor="card-back">
-          Определение (обратная сторона)
+          {t("Определение (обратная сторона)")}
         </label>
         <textarea
           id="card-back"
@@ -96,12 +97,12 @@ export default function CardFromSelectionModal({
           onChange={(e) => setBack(e.target.value)}
           rows={3}
           autoFocus={!initial.back}
-          placeholder="Допишите определение"
+          placeholder={t("Допишите определение")}
           className="w-full rounded-card border border-line px-3 py-2 text-sm mb-3 resize-none"
         />
 
         <label className="text-xs text-ink/50 mb-1 block" htmlFor="card-set">
-          Модуль флеш-карт
+          {t("Модуль флеш-карт")}
         </label>
         <select
           id="card-set"
@@ -110,7 +111,7 @@ export default function CardFromSelectionModal({
           disabled={sets === null}
           className="w-full rounded-card border border-line px-3 py-2 text-sm mb-2 bg-card"
         >
-          <option value={NEW_SET}>+ Новый модуль…</option>
+          <option value={NEW_SET}>{t("+ Новый модуль…")}</option>
           {(sets ?? []).map((s) => (
             <option key={s.id} value={s.id}>
               {s.title}
@@ -122,8 +123,8 @@ export default function CardFromSelectionModal({
             value={newSetTitle}
             onChange={(e) => setNewSetTitle(e.target.value)}
             maxLength={80}
-            placeholder="Название нового модуля"
-            aria-label="Название нового модуля"
+            placeholder={t("Название нового модуля")}
+            aria-label={t("Название нового модуля")}
             className="w-full rounded-card border border-line px-3 py-2 text-sm mb-2"
           />
         )}
@@ -132,14 +133,14 @@ export default function CardFromSelectionModal({
 
         <div className="flex justify-end gap-2 mt-4">
           <button onClick={onClose} className="px-4 py-2 text-sm text-ink/60 hover:text-ink">
-            Отмена
+            {t("Отмена")}
           </button>
           <button
             onClick={handleSave}
             disabled={!canSave}
             className="px-4 py-2 text-sm rounded-card bg-ink text-white hover:bg-ink/90 disabled:opacity-40"
           >
-            {saving ? "Сохраняем…" : "Создать карточку"}
+            {saving ? t("Сохраняем…") : t("Создать карточку")}
           </button>
         </div>
       </div>

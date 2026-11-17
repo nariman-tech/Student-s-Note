@@ -2,6 +2,7 @@ import { useState } from "react";
 import Icon from "./Icon";
 import { PageSummary } from "../types";
 
+import { t } from "../lib/i18n";
 // Вкладки страниц тетради: «Лекция 1 | Лекция 2 | + Страница». У открытой страницы (для владельца) —
 // переименовать, сдвинуть влево/вправо, удалить. Много страниц — вкладки прокручиваются вбок.
 export default function PageTabs({
@@ -36,7 +37,7 @@ export default function PageTabs({
 
   return (
     <div className="mb-3">
-      <div className="flex items-end gap-1 overflow-x-auto border-b border-line" role="tablist" aria-label="Страницы тетради">
+      <div className="flex items-end gap-1 overflow-x-auto border-b border-line" role="tablist" aria-label={t("Страницы тетради")}>
         {pages.map((p) => {
           const active = p.id === currentId;
           if (editing?.id === p.id) {
@@ -52,7 +53,7 @@ export default function PageTabs({
                   if (e.key === "Escape") setEditing(null);
                 }}
                 maxLength={120}
-                aria-label="Название страницы"
+                aria-label={t("Название страницы")}
                 className="text-sm rounded-t-card border border-b-0 border-ink/40 px-3 py-2 w-44 shrink-0 outline-none"
               />
             );
@@ -64,7 +65,7 @@ export default function PageTabs({
               aria-selected={active}
               onClick={() => onSelect(p.id)}
               onDoubleClick={() => !readOnly && setEditing({ id: p.id, title: p.title })}
-              title={readOnly ? p.title : `${p.title} — двойной клик, чтобы переименовать`}
+              title={readOnly ? p.title : t("{0} — двойной клик, чтобы переименовать", [p.title])}
               className={`text-sm px-3 py-2 rounded-t-card border border-b-0 shrink-0 max-w-[200px] truncate -mb-px ${
                 active ? "bg-card border-line font-medium text-ink" : "border-transparent text-ink/50 hover:text-ink"
               }`}
@@ -74,8 +75,8 @@ export default function PageTabs({
           );
         })}
         {!readOnly && (
-          <button onClick={onAdd} className="text-sm px-3 py-2 shrink-0 text-ink/50 hover:text-ink" title="Новая страница">
-            + Страница
+          <button onClick={onAdd} className="text-sm px-3 py-2 shrink-0 text-ink/50 hover:text-ink" title={t("Новая страница")}>
+            {t("+ Страница")}
           </button>
         )}
       </div>
@@ -83,23 +84,23 @@ export default function PageTabs({
       {!readOnly && currentId && editing === null && (
         <div className="flex items-center gap-3 mt-1.5 text-xs text-ink/40">
           <button onClick={() => setEditing({ id: currentId, title: pages[currentIndex]?.title ?? "" })} className="hover:text-ink flex items-center gap-1.5">
-            <Icon name="edit" size={13} /> Переименовать страницу
+            <Icon name="edit" size={13} /> {t("Переименовать страницу")}
           </button>
-          <button onClick={() => onMove(currentId, -1)} disabled={currentIndex <= 0} className="hover:text-ink disabled:opacity-30" aria-label="Сдвинуть страницу влево" title="Сдвинуть влево">
+          <button onClick={() => onMove(currentId, -1)} disabled={currentIndex <= 0} className="hover:text-ink disabled:opacity-30" aria-label={t("Сдвинуть страницу влево")} title={t("Сдвинуть влево")}>
             <Icon name="arrowLeft" size={14} />
           </button>
           <button
             onClick={() => onMove(currentId, 1)}
             disabled={currentIndex === -1 || currentIndex >= pages.length - 1}
             className="hover:text-ink disabled:opacity-30"
-            aria-label="Сдвинуть страницу вправо"
-            title="Сдвинуть вправо"
+            aria-label={t("Сдвинуть страницу вправо")}
+            title={t("Сдвинуть вправо")}
           >
             <Icon name="arrowRight" size={14} />
           </button>
           {pages.length > 1 && (
             <button onClick={() => onDelete(currentId)} className="hover:text-coral ml-auto flex items-center gap-1.5">
-              <Icon name="trash" size={13} /> Удалить страницу
+              <Icon name="trash" size={13} /> {t("Удалить страницу")}
             </button>
           )}
         </div>

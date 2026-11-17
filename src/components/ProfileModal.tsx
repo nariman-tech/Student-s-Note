@@ -4,6 +4,7 @@ import { uploadImage } from "../lib/upload";
 import { PublicProfile } from "../types";
 import Icon from "./Icon";
 
+import { t } from "../lib/i18n";
 // Настройки профиля: аватарка и юзернейм. ID показываем, но менять его нельзя.
 export default function ProfileModal({
   profile,
@@ -75,35 +76,35 @@ export default function ProfileModal({
   return (
     <div className="fixed inset-0 bg-ink/40 flex items-center justify-center z-40 p-4 text-ink" onClick={saving ? undefined : onClose}>
       <div className="bg-card rounded-card p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-        <h3 className="font-display font-700 text-lg mb-4">Профиль</h3>
+        <h3 className="font-display font-700 text-lg mb-4">{t("Профиль")}</h3>
 
         <div className="flex items-center gap-4 mb-5">
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             className="w-20 h-20 rounded-full bg-lavender/30 flex items-center justify-center overflow-hidden shrink-0 border-2 border-dashed border-line hover:border-ink/40"
-            title="Сменить фото"
+            title={t("Сменить фото")}
           >
             {avatarPreview ? (
-              <img src={avatarPreview} alt="Аватарка" className="w-full h-full object-cover" />
+              <img src={avatarPreview} alt={t("Аватарка")} className="w-full h-full object-cover" />
             ) : (
               <span className="text-2xl font-semibold">{(clean || profile.username)[0]?.toUpperCase()}</span>
             )}
           </button>
           <div className="flex flex-col items-start gap-1.5">
             <button onClick={() => fileInputRef.current?.click()} className="text-sm text-ink/70 hover:text-ink flex items-center gap-1.5">
-              <Icon name="image" size={15} /> Сменить фото
+              <Icon name="image" size={15} /> {t("Сменить фото")}
             </button>
             {avatarPreview && (
               <button onClick={handleAvatarRemove} className="text-xs text-ink/40 hover:text-coral">
-                Убрать фото
+                {t("Убрать фото")}
               </button>
             )}
           </div>
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
         </div>
 
-        <label className="text-xs text-ink/50 mb-1 block">Юзернейм</label>
+        <label className="text-xs text-ink/50 mb-1 block">{t("Юзернейм")}</label>
         <div className="flex items-center rounded-card border border-line mb-1 overflow-hidden">
           <span className="pl-3 text-sm text-ink/40">@</span>
           <input
@@ -115,25 +116,25 @@ export default function ProfileModal({
           />
         </div>
         <p className="text-[11px] text-ink/40 mb-4">
-          Латинские буквы, цифры, подчёркивание{usernameChanged && clean && ` · будет: @${clean}`}
+          {t("Латинские буквы, цифры, подчёркивание")}{usernameChanged && clean && t(" · будет: @{0}", [clean])}
         </p>
 
         <p className="text-xs text-ink/50 mb-5">
-          Ваш ID: <span className="font-medium text-ink">{formatPublicId(profile.publicId)}</span> — он не меняется
+          {t("Ваш ID:")}{" "}<span className="font-medium text-ink">{formatPublicId(profile.publicId)}</span> {t("— он не меняется")}
         </p>
 
         {error && <p className="text-xs text-coral mb-3">{error}</p>}
 
         <div className="flex justify-end gap-2">
           <button onClick={onClose} disabled={saving} className="px-4 py-2 text-sm text-ink/60 hover:text-ink">
-            Отмена
+            {t("Отмена")}
           </button>
           <button
             onClick={handleSave}
             disabled={!canSave || saving}
             className="px-4 py-2 text-sm rounded-card bg-ink text-white hover:bg-ink/90 disabled:opacity-40"
           >
-            {saving ? "Сохраняем…" : "Сохранить"}
+            {saving ? t("Сохраняем…") : t("Сохранить")}
           </button>
         </div>
 

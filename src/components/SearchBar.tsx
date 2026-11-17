@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { searchNotebooks, currentUserId } from "../lib/store";
 import { SearchResult } from "../types";
 
+import { t } from "../lib/i18n";
 // Кусочек текста из базы: найденные слова обёрнуты в ⟦ ⟧ — подсвечиваем их.
 // Строим React-элементы, а не HTML, поэтому текст конспекта не может «выполниться» как разметка
 function Highlighted({ text }: { text: string }) {
@@ -60,7 +61,7 @@ export default function SearchBar() {
           setError("");
         }
       } catch (err: any) {
-        if (!cancelled) setError(err?.message ?? "Не получилось выполнить поиск");
+        if (!cancelled) setError(err?.message ?? t("Не получилось выполнить поиск"));
       } finally {
         if (!cancelled) setSearching(false);
       }
@@ -83,8 +84,8 @@ export default function SearchBar() {
           if (e.key === "Enter" && results[0]) navigate(resultUrl(results[0]));
           if (e.key === "Escape") (e.target as HTMLInputElement).blur();
         }}
-        placeholder="Поиск по тетрадям и тексту конспектов…"
-        aria-label="Поиск по тетрадям и конспектам"
+        placeholder={t("Поиск по тетрадям и тексту конспектов…")}
+        aria-label={t("Поиск по тетрадям и конспектам")}
         className="w-full rounded-card border border-line bg-card px-4 py-2.5 text-sm placeholder:text-ink/40 focus:border-ink/40"
       />
 
@@ -93,7 +94,7 @@ export default function SearchBar() {
           {error ? (
             <p className="px-4 py-3 text-sm text-coral">{error}</p>
           ) : results.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-ink/50">{searching ? "Ищем…" : `Ничего не нашлось по «${query}»`}</p>
+            <p className="px-4 py-3 text-sm text-ink/50">{searching ? t("Ищем…") : t("Ничего не нашлось по «{0}»", [query])}</p>
           ) : (
             results.map((r) => (
               <button
@@ -104,7 +105,7 @@ export default function SearchBar() {
                 <span className="flex items-center gap-2 text-sm">
                   <span aria-hidden>{r.iconEmoji}</span>
                   <span className="font-medium truncate">{r.title}</span>
-                  {me && r.ownerId !== me && <span className="text-[11px] text-lavender shrink-0">от друга</span>}
+                  {me && r.ownerId !== me && <span className="text-[11px] text-lavender shrink-0">{t("от друга")}</span>}
                 </span>
                 {r.pageTitle && <span className="flex items-center gap-1 text-[11px] text-ink/40 mt-0.5 truncate"><Icon name="file" size={11} />{r.pageTitle}</span>}
                 {r.snippet && (

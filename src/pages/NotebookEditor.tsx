@@ -37,20 +37,21 @@ import PageTabs from "../components/PageTabs";
 import CardFromSelectionModal from "../components/CardFromSelectionModal";
 import { Notebook, NoteAttachment, NotePage, PageSummary } from "../types";
 
+import { t } from "../lib/i18n";
 const HIGHLIGHT_COLORS = [
-  { name: "розовый", hex: "#FFC9E3" },
-  { name: "жёлтый", hex: "#FFF176" },
-  { name: "голубой", hex: "#AEE2FF" },
+  { name: t("розовый"), hex: "#FFC9E3" },
+  { name: t("жёлтый"), hex: "#FFF176" },
+  { name: t("голубой"), hex: "#AEE2FF" },
 ];
 
 const TEXT_COLORS = [
-  { name: "чёрный", hex: "#1B2340" },
-  { name: "красный", hex: "#E03131" },
-  { name: "оранжевый", hex: "#F08C00" },
-  { name: "зелёный", hex: "#2F9E44" },
-  { name: "синий", hex: "#1971C2" },
-  { name: "фиолетовый", hex: "#9C36B5" },
-  { name: "розовый", hex: "#E64980" },
+  { name: t("чёрный"), hex: "#1B2340" },
+  { name: t("красный"), hex: "#E03131" },
+  { name: t("оранжевый"), hex: "#F08C00" },
+  { name: t("зелёный"), hex: "#2F9E44" },
+  { name: t("синий"), hex: "#1971C2" },
+  { name: t("фиолетовый"), hex: "#9C36B5" },
+  { name: t("розовый"), hex: "#E64980" },
 ];
 
 export default function NotebookEditor() {
@@ -116,11 +117,11 @@ export default function NotebookEditor() {
         // Тетрадь группы открылась — значит, я участник группы и могу её дописывать
         const group = await getGroup(nb.groupId).catch(() => undefined);
         if (cancelled) return;
-        setGroupInfo({ id: nb.groupId, name: group?.name ?? "группы" });
+        setGroupInfo({ id: nb.groupId, name: group?.name ?? t("группы") });
       } else if (!owner) {
         const ownerProfile = await getPublicProfile(nb.ownerId).catch(() => undefined);
         if (cancelled) return;
-        setReadOnlyOwner(ownerProfile?.username ?? "друг");
+        setReadOnlyOwner(ownerProfile?.username ?? t("друг"));
       }
       setIsOwner(owner);
       const canEdit = owner || !!nb.groupId;
@@ -128,7 +129,7 @@ export default function NotebookEditor() {
       if (cancelled) return;
       // Страниц нет (тетрадь создана до появления страниц или первая страница не создалась) —
       // создаём первую, чтобы сразу можно было писать
-      if (list.length === 0 && canEdit) list = [await createPage(id, "Страница 1", 0)];
+      if (list.length === 0 && canEdit) list = [await createPage(id, t("Страница 1"), 0)];
       if (cancelled) return;
       setPages(list);
       setNotebook(nb);
@@ -330,11 +331,11 @@ export default function NotebookEditor() {
     try {
       await flushSave();
       const position = pages.length === 0 ? 0 : Math.max(...pages.map((p) => p.position)) + 1;
-      const created = await createPage(notebook.id, `Страница ${pages.length + 1}`, position);
+      const created = await createPage(notebook.id, t("Страница {0}", [pages.length + 1]), position);
       setPages((list) => [...list, created]);
       selectPage(created.id);
     } catch (err: any) {
-      setUploadError(err?.message ?? "Не получилось добавить страницу");
+      setUploadError(err?.message ?? t("Не получилось добавить страницу"));
     }
   }
 
@@ -346,7 +347,7 @@ export default function NotebookEditor() {
       await renamePage(pageId, title);
     } catch (err: any) {
       setPages(previous);
-      setUploadError(err?.message ?? "Не получилось переименовать страницу");
+      setUploadError(err?.message ?? t("Не получилось переименовать страницу"));
     }
   }
 
@@ -362,7 +363,7 @@ export default function NotebookEditor() {
       await reorderPages(next.map((p) => p.id));
     } catch (err: any) {
       setPages(previous);
-      setUploadError(err?.message ?? "Не получилось изменить порядок страниц");
+      setUploadError(err?.message ?? t("Не получилось изменить порядок страниц"));
     }
   }
 
@@ -430,7 +431,7 @@ export default function NotebookEditor() {
     const delBtn = document.createElement("button");
     delBtn.type = "button";
     delBtn.innerHTML = iconSvg("close", 14);
-    delBtn.title = "Удалить картинку";
+    delBtn.title = t("Удалить картинку");
     delBtn.setAttribute("data-action", "remove-image");
     delBtn.style.cssText =
       "position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:9999px;background:rgba(27,35,64,.85);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;border:none;";
@@ -470,7 +471,7 @@ export default function NotebookEditor() {
       card.target = "_blank";
       card.rel = "noopener noreferrer";
       card.setAttribute("data-file-link", "true");
-      card.title = "Открыть файл";
+      card.title = t("Открыть файл");
       card.style.cssText = "display:flex;align-items:center;gap:10px;padding:12px 40px 12px 12px;color:inherit;text-decoration:none;cursor:pointer;";
 
       const icon = document.createElement("span");
@@ -489,7 +490,7 @@ export default function NotebookEditor() {
     const delBtn = document.createElement("button");
     delBtn.type = "button";
     delBtn.innerHTML = iconSvg("close", 14);
-    delBtn.title = "Удалить";
+    delBtn.title = t("Удалить");
     delBtn.setAttribute("data-action", "remove-file");
     delBtn.style.cssText =
       "position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:9999px;background:rgba(27,35,64,.85);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;border:none;";
@@ -563,7 +564,7 @@ export default function NotebookEditor() {
         insertFileAtCursor(url, file.name, file.type || "application/octet-stream");
       }
     } catch (err: any) {
-      setUploadError(err?.message ?? "Не получилось загрузить файл");
+      setUploadError(err?.message ?? t("Не получилось загрузить файл"));
     } finally {
       setUploading(false);
       input.value = ""; // чтобы можно было выбрать тот же файл ещё раз
@@ -589,7 +590,7 @@ export default function NotebookEditor() {
       scheduleSave(next);
       setDrawingOpen(false);
     } catch (err: any) {
-      setUploadError(err?.message ?? "Не получилось сохранить рисунок");
+      setUploadError(err?.message ?? t("Не получилось сохранить рисунок"));
     } finally {
       setUploading(false);
     }
@@ -606,7 +607,7 @@ export default function NotebookEditor() {
       await renameNotebook(notebook.id, title);
     } catch (err: any) {
       setNotebook(previous);
-      setUploadError(err?.message ?? "Не получилось переименовать тетрадь");
+      setUploadError(err?.message ?? t("Не получилось переименовать тетрадь"));
     }
   }
 
@@ -621,7 +622,7 @@ export default function NotebookEditor() {
       await updateNotebookCover(notebook.id, url, notebook.coverImageUrl);
       setNotebook({ ...notebook, coverImageUrl: url });
     } catch (err: any) {
-      setUploadError(err?.message ?? "Не получилось сменить обложку");
+      setUploadError(err?.message ?? t("Не получилось сменить обложку"));
     } finally {
       setUploading(false);
       input.value = "";
@@ -634,7 +635,7 @@ export default function NotebookEditor() {
       await updateNotebookCover(notebook.id, null, notebook.coverImageUrl);
       setNotebook({ ...notebook, coverImageUrl: undefined });
     } catch (err: any) {
-      setUploadError(err?.message ?? "Не получилось убрать обложку");
+      setUploadError(err?.message ?? t("Не получилось убрать обложку"));
     }
   }
 
@@ -684,10 +685,10 @@ export default function NotebookEditor() {
   }
 
   if (notFound) {
-    return <div className="p-8">Тетрадь не найдена.</div>;
+    return <div className="p-8">{t("Тетрадь не найдена.")}</div>;
   }
   if (!notebook) {
-    return <div className="p-8 text-sm text-ink/40">Загрузка…</div>;
+    return <div className="p-8 text-sm text-ink/40">{t("Загрузка…")}</div>;
   }
 
   return (
@@ -695,7 +696,7 @@ export default function NotebookEditor() {
       {notebook.coverImageUrl && (
         // Обложка — только на экране: в PDF нужен сам конспект
         <div className="group relative mb-4 rounded-card overflow-hidden border border-line print:hidden">
-          <img src={notebook.coverImageUrl} alt="Обложка" className="w-full h-40 object-cover" />
+          <img src={notebook.coverImageUrl} alt={t("Обложка")} className="w-full h-40 object-cover" />
           {!readOnly && (
             <div className="absolute bottom-2 right-2 flex gap-2 md:opacity-0 md:group-hover:opacity-100 focus-within:opacity-100 transition-opacity print:hidden">
               <button
@@ -703,13 +704,13 @@ export default function NotebookEditor() {
                 disabled={uploading}
                 className="text-xs rounded-card bg-card/90 border border-line px-3 py-1.5 hover:border-ink/40 flex items-center gap-1.5"
               >
-                <Icon name="image" size={13} /> Сменить обложку
+                <Icon name="image" size={13} /> {t("Сменить обложку")}
               </button>
               <button
                 onClick={handleCoverRemove}
                 className="text-xs rounded-card bg-card/90 border border-line px-3 py-1.5 hover:border-coral hover:text-coral"
               >
-                Убрать
+                {t("Убрать")}
               </button>
             </div>
           )}
@@ -737,7 +738,7 @@ export default function NotebookEditor() {
               }}
               maxLength={120}
               className="text-xl font-display font-800 rounded-card border border-line px-2 py-0.5 min-w-0"
-              aria-label="Название тетради"
+              aria-label={t("Название тетради")}
             />
           ) : (
             <>
@@ -746,8 +747,8 @@ export default function NotebookEditor() {
                 <button
                   onClick={() => setEditingTitle(notebook.title)}
                   className="text-ink/30 hover:text-ink text-sm print:hidden"
-                  title="Переименовать"
-                  aria-label="Переименовать тетрадь"
+                  title={t("Переименовать")}
+                  aria-label={t("Переименовать тетрадь")}
                 >
                   <Icon name="edit" size={16} />
                 </button>
@@ -759,7 +760,7 @@ export default function NotebookEditor() {
           <button
             onClick={handleExportPdf}
             className="text-sm rounded-card border border-line px-3 py-2 hover:border-ink/40 flex items-center gap-1.5"
-            title="Скачать всю тетрадь в PDF (в окне печати выберите «Сохранить как PDF»)"
+            title={t("Скачать всю тетрадь в PDF (в окне печати выберите «Сохранить как PDF»)")}
           >
             <Icon name="download" size={15} /> PDF
           </button>
@@ -770,8 +771,8 @@ export default function NotebookEditor() {
               onClick={() => coverInputRef.current?.click()}
               disabled={uploading}
               className="text-sm rounded-card border border-line px-3 py-2 hover:border-ink/40"
-              title="Добавить обложку"
-              aria-label="Добавить обложку"
+              title={t("Добавить обложку")}
+              aria-label={t("Добавить обложку")}
             >
               <Icon name="image" size={16} />
             </button>
@@ -782,13 +783,13 @@ export default function NotebookEditor() {
             onClick={() => setShareOpen(true)}
             className="text-sm rounded-card border border-line px-3 py-2 hover:border-ink/40 flex items-center gap-1.5"
           >
-            <Icon name="link" size={15} /> Поделиться
+            <Icon name="link" size={15} /> {t("Поделиться")}
           </button>
           <button
             onClick={() => setDeleteOpen(true)}
             className="text-sm rounded-card border border-line px-3 py-2 hover:border-coral hover:text-coral"
-            title="Удалить тетрадь"
-            aria-label="Удалить тетрадь"
+            title={t("Удалить тетрадь")}
+            aria-label={t("Удалить тетрадь")}
           >
             <Icon name="trash" size={16} />
           </button>
@@ -800,43 +801,43 @@ export default function NotebookEditor() {
       </div>
       {deleteOpen && (
         <ConfirmDialog
-          title="Удалить тетрадь?"
-          text={`«${notebook.title}» удалится вместе с конспектом, картинками и файлами. Отменить это нельзя.`}
+          title={t("Удалить тетрадь?")}
+          text={t("«{0}» удалится вместе с конспектом, картинками и файлами. Отменить это нельзя.", [notebook.title])}
           onConfirm={handleDelete}
           onClose={() => setDeleteOpen(false)}
         />
       )}
       <p className="text-xs text-ink/40 mb-6 print:hidden">
-        {readOnly && `Только чтение · тетрадь @${readOnlyOwner}`}
+        {readOnly && t("Только чтение · тетрадь @{0}", [readOnlyOwner])}
         {groupInfo && (
           <>
-            <Icon name="groups" size={13} className="inline -mt-0.5 mr-1" />Тетрадь группы{" "}
+            <Icon name="groups" size={13} className="inline -mt-0.5 mr-1" />{t("Тетрадь группы")}{" "}
             <button onClick={() => navigate(`/groups/${groupInfo.id}?tab=notebooks`)} className="underline hover:text-ink">
               «{groupInfo.name}»
             </button>
-            {lastEditor && ` · последнее изменение: @${lastEditor}`}
+            {lastEditor && t(" · последнее изменение: @{0}", [lastEditor])}
             {" · "}
           </>
         )}
-        {uploading && "Загружаем файл… "}
+        {uploading && t("Загружаем файл… ")}
         {uploadError && <span className="text-coral">{uploadError} </span>}
-        {conflict ? "Не сохранено — выберите версию выше" : saveState === "saving" && "Сохраняем…"}
-        {!readOnly && saveState === "saved" && (online ? "Все изменения сохранены" : "Сохранено на устройстве — отправится, когда появится интернет")}
-        {!readOnly && saveState === "idle" && "Начните писать — сохранится автоматически. Выделите текст, чтобы выделить его цветом."}
+        {conflict ? t("Не сохранено — выберите версию выше") : saveState === "saving" && t("Сохраняем…")}
+        {!readOnly && saveState === "saved" && (online ? t("Все изменения сохранены") : t("Сохранено на устройстве — отправится, когда появится интернет"))}
+        {!readOnly && saveState === "idle" && t("Начните писать — сохранится автоматически. Выделите текст, чтобы выделить его цветом.")}
       </p>
 
       {conflict && (
         <div role="alert" className="mb-3 rounded-card border border-coral/40 bg-coral/10 p-3 text-sm print:hidden">
           <p className="mb-2 flex gap-2">
             <Icon name="alert" size={16} className="text-coral shrink-0 mt-0.5" />
-            Эту страницу только что изменил другой участник, а у вас есть несохранённые правки. Чью версию оставить?
+            {t("Эту страницу только что изменил другой участник, а у вас есть несохранённые правки. Чью версию оставить?")}
           </p>
           <div className="flex flex-wrap gap-2">
             <button onClick={handleConflictTakeTheirs} className="text-xs rounded-card border border-line bg-card px-3 py-1.5 hover:border-ink/40">
-              Загрузить их версию (мои правки пропадут)
+              {t("Загрузить их версию (мои правки пропадут)")}
             </button>
             <button onClick={handleConflictKeepMine} className="text-xs rounded-card bg-ink text-white px-3 py-1.5 hover:bg-ink/90">
-              Сохранить мою поверх
+              {t("Сохранить мою поверх")}
             </button>
           </div>
         </div>
@@ -861,17 +862,17 @@ export default function NotebookEditor() {
 
       {!readOnly && (
       <div className="flex items-center gap-1 mb-2 flex-wrap print:hidden">
-        <button onMouseDown={(e) => handleFormat(e, "bold")} className="w-8 h-8 rounded-card border border-line hover:border-ink/40 flex items-center justify-center text-sm font-bold" title="Жирный">
-          Ж
+        <button onMouseDown={(e) => handleFormat(e, "bold")} className="w-8 h-8 rounded-card border border-line hover:border-ink/40 flex items-center justify-center text-sm font-bold" title={t("Жирный")}>
+          {t("Ж")}
         </button>
-        <button onMouseDown={(e) => handleFormat(e, "italic")} className="w-8 h-8 rounded-card border border-line hover:border-ink/40 flex items-center justify-center text-sm italic" title="Курсив">
-          К
+        <button onMouseDown={(e) => handleFormat(e, "italic")} className="w-8 h-8 rounded-card border border-line hover:border-ink/40 flex items-center justify-center text-sm italic" title={t("Курсив")}>
+          {t("К")}
         </button>
-        <button onMouseDown={(e) => handleFormat(e, "underline")} className="w-8 h-8 rounded-card border border-line hover:border-ink/40 flex items-center justify-center text-sm underline" title="Подчёркнутый">
-          Ч
+        <button onMouseDown={(e) => handleFormat(e, "underline")} className="w-8 h-8 rounded-card border border-line hover:border-ink/40 flex items-center justify-center text-sm underline" title={t("Подчёркнутый")}>
+          {t("Ч")}
         </button>
-        <button onMouseDown={(e) => handleFormat(e, "strikeThrough")} className="w-8 h-8 rounded-card border border-line hover:border-ink/40 flex items-center justify-center text-sm line-through" title="Зачёркнутый">
-          З
+        <button onMouseDown={(e) => handleFormat(e, "strikeThrough")} className="w-8 h-8 rounded-card border border-line hover:border-ink/40 flex items-center justify-center text-sm line-through" title={t("Зачёркнутый")}>
+          {t("З")}
         </button>
         <span className="w-px h-5 bg-line mx-1" />
         {TEXT_COLORS.map((c) => (
@@ -880,8 +881,8 @@ export default function NotebookEditor() {
             onMouseDown={(e) => handleFormat(e, "foreColor", c.hex)}
             className="w-6 h-6 rounded-full border border-line hover:scale-110 transition-transform"
             style={{ backgroundColor: c.hex }}
-            title={`Цвет текста: ${c.name}`}
-            aria-label={`Цвет текста: ${c.name}`}
+            title={t("Цвет текста: {0}", [c.name])}
+            aria-label={t("Цвет текста: {0}", [c.name])}
           />
         ))}
       </div>
@@ -917,9 +918,9 @@ export default function NotebookEditor() {
             <button
               onMouseDown={handleMakeCard}
               className="text-xs text-white font-medium px-1.5 py-0.5 rounded hover:bg-white/10 whitespace-nowrap flex items-center gap-1.5"
-              title="Сделать флеш-карту из выделенного текста"
+              title={t("Сделать флеш-карту из выделенного текста")}
             >
-              <Icon name="cards" size={13} /> В карточку
+              <Icon name="cards" size={13} /> {t("В карточку")}
             </button>
             {!readOnly && <span className="w-px h-4 bg-white/20" aria-hidden />}
             {!readOnly && HIGHLIGHT_COLORS.map((c) => (
@@ -928,8 +929,8 @@ export default function NotebookEditor() {
                 onMouseDown={(e) => handleHighlight(e, c.hex)}
                 className="w-6 h-6 rounded-full border-2 border-white/30 hover:border-white"
                 style={{ backgroundColor: c.hex }}
-                aria-label={`Выделить ${c.name}`}
-                title={`Выделить ${c.name}`}
+                aria-label={t("Выделить {0}", [c.name])}
+                title={t("Выделить {0}", [c.name])}
               />
             ))}
           </div>
@@ -939,7 +940,7 @@ export default function NotebookEditor() {
       {!readOnly && (
       <div className="flex flex-wrap gap-3 mt-4 print:hidden">
         <label className="cursor-pointer inline-flex items-center gap-2 text-sm rounded-card border border-line px-3 py-2 hover:border-ink/40">
-          <Icon name="paperclip" size={15} /> Прикрепить файл
+          <Icon name="paperclip" size={15} /> {t("Прикрепить файл")}
           <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} />
         </label>
         <button
@@ -948,14 +949,14 @@ export default function NotebookEditor() {
             drawingOpen ? "bg-ink text-white" : "bg-highlight text-ink hover:brightness-95"
           }`}
         >
-          <Icon name={drawingOpen ? "check" : "edit"} size={15} /> {drawingOpen ? "Готово" : "Рисовать"}
+          <Icon name={drawingOpen ? "check" : "edit"} size={15} /> {drawingOpen ? t("Готово") : t("Рисовать")}
         </button>
       </div>
       )}
 
       {attachments.length > 0 && (
         <div className="mt-6">
-          <h3 className="text-xs font-medium text-ink/50 mb-2">Вложения и решения</h3>
+          <h3 className="text-xs font-medium text-ink/50 mb-2">{t("Вложения и решения")}</h3>
           <div className="flex flex-col gap-3">
             {attachments.map((a) => (
               <div key={a.id} className="relative rounded-card border border-line overflow-hidden bg-card">
@@ -970,8 +971,8 @@ export default function NotebookEditor() {
                 <button
                   onClick={() => handleRemoveAttachment(a.id)}
                   className="print:hidden absolute top-2 right-2 w-7 h-7 rounded-full bg-ink/80 text-white flex items-center justify-center text-sm hover:bg-coral"
-                  title="Удалить"
-                  aria-label="Удалить вложение"
+                  title={t("Удалить")}
+                  aria-label={t("Удалить вложение")}
                 >
                   <Icon name="close" size={14} />
                 </button>
@@ -1017,17 +1018,17 @@ export default function NotebookEditor() {
           role="status"
           className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 bg-ink text-white text-sm rounded-card px-4 py-2.5 shadow-lg flex items-center gap-3 print:hidden"
         >
-          <Icon name="check" size={16} className="text-highlight" /> Карточка добавлена в «{cardToast}»
+          <Icon name="check" size={16} className="text-highlight" /> {t("Карточка добавлена в «")}{cardToast}»
           <button onClick={() => navigate("/flashcards")} className="underline text-white/80 hover:text-white">
-            Открыть
+            {t("Открыть")}
           </button>
         </div>
       )}
 
       {deletingPageId && (
         <ConfirmDialog
-          title="Удалить страницу?"
-          text={`«${pages.find((p) => p.id === deletingPageId)?.title ?? ""}» удалится вместе с текстом, картинками и файлами. Отменить это нельзя.`}
+          title={t("Удалить страницу?")}
+          text={t("«{0}» удалится вместе с текстом, картинками и файлами. Отменить это нельзя.", [pages.find((p) => p.id === deletingPageId)?.title ?? ""])}
           onConfirm={() => handleDeletePage(deletingPageId)}
           onClose={() => setDeletingPageId(null)}
         />
@@ -1037,8 +1038,8 @@ export default function NotebookEditor() {
         <FriendsShareModal
           title={notebook.title}
           target={{
-            heading: "Поделиться тетрадью",
-            hint: "отмеченные друзья смогут читать её в приложении, но не менять.",
+            heading: t("Поделиться тетрадью"),
+            hint: t("отмеченные друзья смогут читать её в приложении, но не менять."),
             loadShared: () => getNotebookShares(notebook.id),
             share: (friendId) => shareNotebook(notebook.id, friendId),
             unshare: (friendId) => unshareNotebook(notebook.id, friendId),
@@ -1047,7 +1048,7 @@ export default function NotebookEditor() {
               enable: () => enableShareLink("notebooks", notebook.id),
               disable: () => disableShareLink("notebooks", notebook.id),
               url: notebookLink,
-              messageText: `Посмотри мой конспект «${notebook.title}» в приложении Lectiva`,
+              messageText: t("Посмотри мой конспект «{0}» в приложении Lectiva", [notebook.title]),
             },
           }}
           onClose={() => setShareOpen(false)}

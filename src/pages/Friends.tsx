@@ -25,6 +25,7 @@ import { friendInviteLink } from "../lib/links";
 import Icon, { IconName } from "../components/Icon";
 import { Friend, IncomingRequest, Notebook, FlashcardSet, PublicProfile } from "../types";
 
+import { t } from "../lib/i18n";
 export default function Friends() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [incoming, setIncoming] = useState<IncomingRequest[]>([]);
@@ -68,14 +69,14 @@ export default function Friends() {
     <div className="px-4 py-6 md:px-10 md:py-10 max-w-2xl mx-auto">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h2 className="text-3xl md:text-4xl font-display font-800">Друзья</h2>
-          <p className="text-sm text-ink/50 mt-1">Делитесь конспектами друг с другом</p>
+          <h2 className="text-3xl md:text-4xl font-display font-800">{t("Друзья")}</h2>
+          <p className="text-sm text-ink/50 mt-1">{t("Делитесь конспектами друг с другом")}</p>
         </div>
         <button
           onClick={() => setSearchOpen(true)}
           className="text-sm rounded-card bg-ink text-white px-4 py-2.5 font-medium hover:bg-ink/90"
         >
-          + Найти друга
+          {t("+ Найти друга")}
         </button>
       </div>
 
@@ -83,7 +84,7 @@ export default function Friends() {
 
       {incoming.length > 0 && (
         <div className="mb-6">
-          <h3 className="text-xs font-medium text-ink/50 mb-2">Заявки в друзья</h3>
+          <h3 className="text-xs font-medium text-ink/50 mb-2">{t("Заявки в друзья")}</h3>
           <div className="flex flex-col gap-2">
             {incoming.map((r) => (
               <div key={r.id} className="rounded-card border border-line bg-card p-3 flex items-center justify-between">
@@ -96,13 +97,13 @@ export default function Friends() {
                     onClick={() => handleAccept(r.id)}
                     className="text-xs rounded-card bg-sage/15 text-sage font-medium px-3 py-1.5 hover:bg-sage/25"
                   >
-                    Принять
+                    {t("Принять")}
                   </button>
                   <button
                     onClick={() => handleDecline(r.id)}
                     className="text-xs rounded-card border border-line px-3 py-1.5 hover:border-ink/40"
                   >
-                    Отклонить
+                    {t("Отклонить")}
                   </button>
                 </div>
               </div>
@@ -112,9 +113,9 @@ export default function Friends() {
       )}
 
       {loading ? (
-        <p className="text-sm text-ink/40">Загрузка…</p>
+        <p className="text-sm text-ink/40">{t("Загрузка…")}</p>
       ) : friends.length === 0 ? (
-        <p className="text-sm text-ink/50">Пока нет друзей — найдите кого-нибудь по юзернейму или ID.</p>
+        <p className="text-sm text-ink/50">{t("Пока нет друзей — найдите кого-нибудь по юзернейму или ID.")}</p>
       ) : (
         <div className="flex flex-col gap-3">
           {friends.map((f) => (
@@ -131,13 +132,13 @@ export default function Friends() {
                   onClick={() => setPickerFriendId(f.id)}
                   className="text-xs rounded-card border border-line px-3 py-1.5 hover:border-ink/40 flex items-center gap-1.5"
                 >
-                  <Icon name="link" size={13} /> Поделиться
+                  <Icon name="link" size={13} /> {t("Поделиться")}
                 </button>
                 <button
                   onClick={() => setRemovingFriend(f)}
                   className="text-xs rounded-card border border-line px-2.5 py-1.5 text-ink/50 hover:border-coral hover:text-coral"
-                  title="Удалить из друзей"
-                  aria-label={`Удалить @${f.profile.username} из друзей`}
+                  title={t("Удалить из друзей")}
+                  aria-label={t("Удалить @{0} из друзей", [f.profile.username])}
                 >
                   <Icon name="close" size={14} />
                 </button>
@@ -149,8 +150,8 @@ export default function Friends() {
 
       {removingFriend && (
         <ConfirmDialog
-          title="Удалить из друзей?"
-          text={`@${removingFriend.profile.username} пропадёт из вашего списка друзей, а вы — из его. Доступ к тетрадям, которыми вы делились, закроется. Потом можно снова отправить заявку.`}
+          title={t("Удалить из друзей?")}
+          text={t("@{0} пропадёт из вашего списка друзей, а вы — из его. Доступ к тетрадям, которыми вы делились, закроется. Потом можно снова отправить заявку.", [removingFriend.profile.username])}
           onConfirm={async () => {
             await removeFriend(removingFriend.id, removingFriend.profile.id);
             await load();
@@ -191,21 +192,21 @@ function MyIdCard({ publicId }: { publicId: number }) {
     <div className="mb-6 rounded-card border border-line bg-card p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs text-ink/50">Ваш ID — друзья могут найти вас по нему</p>
+          <p className="text-xs text-ink/50">{t("Ваш ID — друзья могут найти вас по нему")}</p>
           <p className="font-display font-800 text-lg tracking-wide">{formatPublicId(publicId)}</p>
         </div>
         <button onClick={handleCopy} className="text-xs rounded-card border border-line px-3 py-1.5 hover:border-ink/40 flex items-center gap-1.5 shrink-0">
           <Icon name={copied ? "check" : "copy"} size={13} />
-          {copied ? "Скопировано" : "Копировать"}
+          {copied ? t("Скопировано") : t("Копировать")}
         </button>
       </div>
       {/* Приглашение через мессенджеры: друг откроет ссылку и пришлёт вам заявку */}
       <div className="mt-4 pt-4 border-t border-line">
-        <p className="text-sm font-semibold mb-0.5">Пригласить друга через мессенджер</p>
-        <p className="text-xs text-ink/50 mb-3">Друг откроет ссылку, войдёт в Lectiva и пришлёт вам заявку — останется её принять.</p>
+        <p className="text-sm font-semibold mb-0.5">{t("Пригласить друга через мессенджер")}</p>
+        <p className="text-xs text-ink/50 mb-3">{t("Друг откроет ссылку, войдёт в Lectiva и пришлёт вам заявку — останется её принять.")}</p>
         <MessengerShare
           url={friendInviteLink(publicId)}
-          text={`Добавь меня в друзья в Lectiva — будем делиться конспектами. Мой ID: ${formatPublicId(publicId)}`}
+          text={t("Добавь меня в друзья в Lectiva — будем делиться конспектами. Мой ID: {0}", [formatPublicId(publicId)])}
         />
       </div>
     </div>
@@ -255,7 +256,7 @@ function SearchModal({
         const found = await searchUsers(query);
         if (!cancelled) setResults(found);
       } catch (err: any) {
-        if (!cancelled) setError(err?.message ?? "Ошибка поиска");
+        if (!cancelled) setError(err?.message ?? t("Ошибка поиска"));
       }
     }, 250);
     return () => {
@@ -271,19 +272,19 @@ function SearchModal({
       setSentIds((s) => new Set(s).add(id));
       onSent();
     } catch (err: any) {
-      setError(err?.message ?? "Не получилось отправить заявку");
+      setError(err?.message ?? t("Не получилось отправить заявку"));
     }
   }
 
   return (
     <div className="fixed inset-0 bg-ink/40 flex items-center justify-center z-30 p-4" onClick={onClose}>
       <div className="bg-card rounded-card p-6 w-full max-w-sm max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <h3 className="font-display font-700 mb-4">Найти друга</h3>
+        <h3 className="font-display font-700 mb-4">{t("Найти друга")}</h3>
         <input
           autoFocus
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Введите юзернейм или ID друга"
+          placeholder={t("Введите юзернейм или ID друга")}
           className="w-full rounded-card border border-line px-3 py-2 text-sm mb-3"
         />
         {error && <p className="text-xs text-coral mb-2">{error}</p>}
@@ -305,16 +306,16 @@ function SearchModal({
                   disabled={already}
                   className="text-xs rounded-card bg-ink text-white px-2.5 py-1 hover:bg-ink/90 disabled:opacity-40"
                 >
-                  {already ? "Отправлено" : "Добавить"}
+                  {already ? t("Отправлено") : t("Добавить")}
                 </button>
               </div>
             );
           })}
-          {query.trim() && results.length === 0 && <p className="text-sm text-ink/40">Никого не нашлось</p>}
+          {query.trim() && results.length === 0 && <p className="text-sm text-ink/40">{t("Никого не нашлось")}</p>}
         </div>
 
         <button onClick={onClose} className="w-full text-center text-xs text-ink/50 hover:text-ink mt-4">
-          Закрыть
+          {t("Закрыть")}
         </button>
       </div>
     </div>
@@ -343,7 +344,7 @@ function SharePicker({ friend, onClose }: { friend: PublicProfile; onClose: () =
         setSets(fs);
         setSharedKeys(new Set([...nbShared.map((id) => `nb:${id}`), ...setShared.map((id) => `set:${id}`)]));
       })
-      .catch((err) => setShareError(err?.message ?? "Не получилось загрузить"))
+      .catch((err) => setShareError(err?.message ?? t("Не получилось загрузить")))
       .finally(() => setLoading(false));
   }, [friend.id]);
 
@@ -363,7 +364,7 @@ function SharePicker({ friend, onClose }: { friend: PublicProfile; onClose: () =
         setSharedKeys((s) => new Set(s).add(key));
       }
     } catch (err: any) {
-      setShareError(err?.message ?? "Не получилось изменить доступ");
+      setShareError(err?.message ?? t("Не получилось изменить доступ"));
     } finally {
       setBusyKey(null);
     }
@@ -381,7 +382,7 @@ function SharePicker({ friend, onClose }: { friend: PublicProfile; onClose: () =
       >
         <Icon name={icon} size={16} className="text-ink/50 shrink-0" />
         <span className="flex-1 truncate">{title}</span>
-        <span className={`text-xs ${shared ? "text-sage font-medium" : "text-ink/40"}`}>{shared ? "Открыто" : "Открыть"}</span>
+        <span className={`text-xs ${shared ? "text-sage font-medium" : "text-ink/40"}`}>{shared ? t("Открыто") : t("Открыть")}</span>
       </button>
     );
   }
@@ -389,17 +390,17 @@ function SharePicker({ friend, onClose }: { friend: PublicProfile; onClose: () =
   return (
     <div className="fixed inset-0 bg-ink/40 flex items-center justify-center z-30 p-4" onClick={onClose}>
       <div className="bg-card rounded-card p-6 w-full max-w-sm max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <h3 className="font-display font-700 mb-1">Поделиться с @{friend.username}</h3>
-        <p className="text-xs text-ink/50 mb-4">Друг увидит это у себя в разделе «Со мной поделились»</p>
+        <h3 className="font-display font-700 mb-1">{t("Поделиться с @")}{friend.username}</h3>
+        <p className="text-xs text-ink/50 mb-4">{t("Друг увидит это у себя в разделе «Со мной поделились»")}</p>
         {shareError && <p className="text-xs text-coral mb-2">{shareError}</p>}
 
         {loading ? (
-          <p className="text-sm text-ink/40">Загрузка…</p>
+          <p className="text-sm text-ink/40">{t("Загрузка…")}</p>
         ) : (
           <>
             {notebooks.length > 0 && (
               <>
-                <p className="text-xs font-medium text-ink/40 mb-1.5">Тетради — друг сможет читать, но не менять</p>
+                <p className="text-xs font-medium text-ink/40 mb-1.5">{t("Тетради — друг сможет читать, но не менять")}</p>
                 <div className="flex flex-col gap-1.5 mb-4">
                   {notebooks.map((n) => (
                     <ToggleRow
@@ -418,7 +419,7 @@ function SharePicker({ friend, onClose }: { friend: PublicProfile; onClose: () =
 
             {sets.length > 0 && (
               <>
-                <p className="text-xs font-medium text-ink/40 mb-1.5">Модули флеш-карт — друг сможет изучать, но не менять</p>
+                <p className="text-xs font-medium text-ink/40 mb-1.5">{t("Модули флеш-карт — друг сможет изучать, но не менять")}</p>
                 <div className="flex flex-col gap-1.5">
                   {sets.map((st) => (
                     <ToggleRow
@@ -436,13 +437,13 @@ function SharePicker({ friend, onClose }: { friend: PublicProfile; onClose: () =
             )}
 
             {notebooks.length === 0 && sets.length === 0 && (
-              <p className="text-sm text-ink/50">Пока нечем делиться — создайте тетрадь или модуль флеш-карт.</p>
+              <p className="text-sm text-ink/50">{t("Пока нечем делиться — создайте тетрадь или модуль флеш-карт.")}</p>
             )}
           </>
         )}
 
         <button onClick={onClose} className="w-full text-center text-xs text-ink/50 hover:text-ink mt-4">
-          Закрыть
+          {t("Закрыть")}
         </button>
       </div>
     </div>

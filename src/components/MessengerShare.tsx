@@ -2,6 +2,7 @@ import { useState } from "react";
 import { isLocalAppUrl } from "../lib/links";
 import Icon, { IconName } from "./Icon";
 
+import { t } from "../lib/i18n";
 // Кнопки «отправить ссылку» в популярные мессенджеры + копирование.
 // Мессенджеры открываются в браузере/приложении со вставленным текстом — остаётся выбрать, кому отправить.
 export default function MessengerShare({ url, text }: { url: string; text: string }) {
@@ -11,8 +12,8 @@ export default function MessengerShare({ url, text }: { url: string; text: strin
   const targets: { name: string; icon: IconName; color: string; href: string }[] = [
     { name: "Telegram", icon: "send", color: "#2AABEE", href: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}` },
     { name: "WhatsApp", icon: "chat", color: "#25D366", href: `https://wa.me/?text=${encodeURIComponent(message)}` },
-    { name: "ВКонтакте", icon: "globe", color: "#0077FF", href: `https://vk.com/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}` },
-    { name: "Почта", icon: "mail", color: "#1B2140", href: `mailto:?subject=${encodeURIComponent(text)}&body=${encodeURIComponent(message)}` },
+    { name: t("ВКонтакте"), icon: "globe", color: "#0077FF", href: `https://vk.com/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}` },
+    { name: t("Почта"), icon: "mail", color: "#1B2140", href: `mailto:?subject=${encodeURIComponent(text)}&body=${encodeURIComponent(message)}` },
   ];
 
   async function handleCopy() {
@@ -52,28 +53,27 @@ export default function MessengerShare({ url, text }: { url: string; text: strin
           value={url}
           onFocus={(e) => e.target.select()}
           className="flex-1 min-w-0 rounded-card border border-line px-2.5 py-2 text-xs text-ink/70 bg-paper"
-          aria-label="Ссылка"
+          aria-label={t("Ссылка")}
         />
         <button onClick={handleCopy} className="text-xs rounded-card border border-line px-3 py-2 hover:border-ink/40 shrink-0 flex items-center gap-1.5">
           <Icon name={copied ? "check" : "copy"} size={13} />
-          {copied ? "Скопировано" : "Копировать"}
+          {copied ? t("Скопировано") : t("Копировать")}
         </button>
         {canNativeShare && (
           <button
             onClick={() => navigator.share({ title: text, text, url }).catch(() => {})}
             className="text-xs rounded-card border border-line px-3 py-2 hover:border-ink/40 shrink-0 flex items-center gap-1"
-            title="Другие приложения"
+            title={t("Другие приложения")}
           >
             <Icon name="more" size={13} />
-            Ещё
+            {t("Ещё")}
           </button>
         )}
       </div>
       {isLocalAppUrl() && (
         <p className="text-[11px] text-ink/40 mt-2 leading-relaxed">
           <Icon name="alert" size={12} className="inline -mt-0.5 mr-1" />
-          Приложение пока работает только на вашем компьютере, поэтому у других людей ссылка не откроется.
-          Она заработает, когда приложение будет опубликовано в интернете.
+          {t("Приложение пока работает только на вашем компьютере, поэтому у других людей ссылка не откроется. Она заработает, когда приложение будет опубликовано в интернете.")}
         </p>
       )}
     </div>

@@ -11,6 +11,8 @@ import ProfileModal from "../components/ProfileModal";
 import { FeedbackModal } from "../components/Feedback";
 import ConfirmDialog from "../components/ConfirmDialog";
 import Icon, { IconName } from "../components/Icon";
+import LanguagePicker from "../components/LanguagePicker";
+import { t } from "../lib/i18n";
 
 // Настройки: профиль, вход, работа без интернета, помощь и удаление аккаунта
 export default function Settings({
@@ -35,7 +37,7 @@ export default function Settings({
 
   return (
     <div className="px-4 py-6 md:px-10 md:py-10 max-w-2xl mx-auto">
-      <h2 className="text-3xl md:text-4xl font-display font-800 mb-8">Настройки</h2>
+      <h2 className="text-3xl md:text-4xl font-display font-800 mb-8">{t("Настройки")}</h2>
 
       {/* Профиль */}
       <section className="rounded-2xl bg-card border border-line p-5 flex items-center gap-4 mb-8">
@@ -55,24 +57,31 @@ export default function Settings({
           onClick={() => setProfileOpen(true)}
           className="shrink-0 rounded-card border border-line px-3.5 py-2 text-sm font-medium hover:border-ink/40"
         >
-          Изменить
+          {t("Изменить")}
         </button>
       </section>
 
       <OfflineSection />
 
-      <Group title="Помощь">
-        <Row icon="message" label="Оставить отзыв" onClick={() => setFeedbackOpen(true)} />
-        <Row icon="shield" label="Политика конфиденциальности" to="/privacy" />
-        {admin && <Row icon="chart" label="Аналитика" to="/admin" />}
+      <Group title={t("Язык")}>
+        <div className="flex items-center justify-between gap-3 px-4 py-3.5">
+          <span className="text-sm font-medium">{t("Язык интерфейса")}</span>
+          <LanguagePicker />
+        </div>
       </Group>
 
-      <Group title="Аккаунт">
-        <Row icon="logout" label="Выйти из аккаунта" onClick={() => setLogoutOpen(true)} />
+      <Group title={t("Помощь")}>
+        <Row icon="message" label={t("Оставить отзыв")} onClick={() => setFeedbackOpen(true)} />
+        <Row icon="shield" label={t("Политика конфиденциальности")} to="/privacy" />
+        {admin && <Row icon="chart" label={t("Аналитика")} to="/admin" />}
+      </Group>
+
+      <Group title={t("Аккаунт")}>
+        <Row icon="logout" label={t("Выйти из аккаунта")} onClick={() => setLogoutOpen(true)} />
         <Row
           icon="trash"
-          label="Удалить аккаунт"
-          hint="Навсегда удаляет ваши тетради, карточки и файлы"
+          label={t("Удалить аккаунт")}
+          hint={t("Навсегда удаляет ваши тетради, карточки и файлы")}
           danger
           onClick={() => setDeleteOpen(true)}
         />
@@ -82,13 +91,13 @@ export default function Settings({
       {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
       {logoutOpen && (
         <ConfirmDialog
-          title="Выйти из аккаунта?"
+          title={t("Выйти из аккаунта?")}
           text={
             pending > 0
-              ? `На этом устройстве есть неотправленные правки (${pending}). Если выйти сейчас, они пропадут — сначала подключитесь к интернету.`
-              : "Сохранённые для офлайна конспекты на этом устройстве будут стёрты. Всё остальное останется в аккаунте."
+              ? t("На этом устройстве есть неотправленные правки ({0}). Если выйти сейчас, они пропадут — сначала подключитесь к интернету.", [pending])
+              : t("Сохранённые для офлайна конспекты на этом устройстве будут стёрты. Всё остальное останется в аккаунте.")
           }
-          confirmLabel="Выйти"
+          confirmLabel={t("Выйти")}
           onConfirm={() => signOut()}
           onClose={() => setLogoutOpen(false)}
         />
@@ -175,16 +184,16 @@ function OfflineSection() {
         done = Math.min(pageIds.length, i + 4);
         setProgress({ done, total: pageIds.length });
       }
-      setResult(`Готово: ${notebooks.length} тетрадей, ${pageIds.length} страниц доступны без интернета`);
+      setResult(t("Готово: {0} тетрадей, {1} страниц доступны без интернета", [notebooks.length, pageIds.length]));
     } catch (err: any) {
-      setResult(err?.message ?? "Не получилось сохранить — попробуйте ещё раз");
+      setResult(err?.message ?? t("Не получилось сохранить — попробуйте ещё раз"));
     } finally {
       setProgress(null);
     }
   }
 
   return (
-    <Group title="Без интернета">
+    <Group title={t("Без интернета")}>
       <div className="px-4 py-4 flex gap-3">
         <span
           className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
@@ -194,11 +203,10 @@ function OfflineSection() {
           <Icon name={online ? "cloud" : "offline"} size={18} />
         </span>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium">{online ? "Вы онлайн" : "Нет подключения"}</p>
+          <p className="text-sm font-medium">{online ? t("Вы онлайн") : t("Нет подключения")}</p>
           <p className="text-xs text-ink/50 mt-0.5 leading-relaxed">
-            Тетради, которые вы открывали, читаются и редактируются без интернета. Правки сохраняются на
-            устройстве и отправляются сами, когда сеть вернётся.
-            {pending > 0 && ` Сейчас ждут отправки: ${pending}.`}
+            {t("Тетради, которые вы открывали, читаются и редактируются без интернета. Правки сохраняются на устройстве и отправляются сами, когда сеть вернётся.")}
+            {pending > 0 && t(" Сейчас ждут отправки: {0}.", [pending])}
           </p>
           <button
             onClick={downloadAll}
@@ -207,9 +215,9 @@ function OfflineSection() {
           >
             {progress
               ? progress.total
-                ? `Сохраняем страницы: ${progress.done} из ${progress.total}`
-                : "Собираем список…"
-              : "Сохранить все тетради на устройство"}
+                ? t("Сохраняем страницы: {0} из {1}", [progress.done, progress.total])
+                : t("Собираем список…")
+              : t("Сохранить все тетради на устройство")}
           </button>
           {result && <p className="text-xs text-ink/60 mt-2">{result}</p>}
         </div>
@@ -219,10 +227,10 @@ function OfflineSection() {
 }
 
 const STEP_TEXT: Record<DeletionStep, string> = {
-  collect: "Проверяем, какие файлы нужны группам…",
-  files: "Удаляем ваши файлы…",
-  account: "Удаляем аккаунт…",
-  done: "Аккаунт удалён",
+  collect: t("Проверяем, какие файлы нужны группам…"),
+  files: t("Удаляем ваши файлы…"),
+  account: t("Удаляем аккаунт…"),
+  done: t("Аккаунт удалён"),
 };
 
 // Удаление аккаунта: объясняем последствия и просим ввести юзернейм — случайно не нажмёшь
@@ -242,7 +250,7 @@ function DeleteAccountDialog({ username, onClose }: { username: string; onClose:
       // После выхода App сам покажет экран входа
     } catch (err: any) {
       setStep(null);
-      setError(err?.message ?? "Не получилось удалить аккаунт. Попробуйте ещё раз.");
+      setError(err?.message ?? t("Не получилось удалить аккаунт. Попробуйте ещё раз."));
     }
   }
 
@@ -252,14 +260,14 @@ function DeleteAccountDialog({ username, onClose }: { username: string; onClose:
         <span className="w-11 h-11 rounded-full bg-coral/10 text-coral flex items-center justify-center mb-4">
           <Icon name="trash" size={22} />
         </span>
-        <h3 className="font-display font-800 text-xl mb-2">Удалить аккаунт навсегда?</h3>
+        <h3 className="font-display font-800 text-xl mb-2">{t("Удалить аккаунт навсегда?")}</h3>
         <ul className="text-sm text-ink/70 space-y-1.5 mb-4 list-disc pl-5">
-          <li>Ваши тетради, страницы, флеш-карты, друзья и загруженные файлы удалятся без возможности восстановить.</li>
-          <li>Группы, которые вы создали, перейдут к другому участнику. Если вы в группе одни, она удалится.</li>
-          <li>Ваши записи в общих тетрадях групп и сообщения в чатах останутся у группы, без вашего имени.</li>
+          <li>{t("Ваши тетради, страницы, флеш-карты, друзья и загруженные файлы удалятся без возможности восстановить.")}</li>
+          <li>{t("Группы, которые вы создали, перейдут к другому участнику. Если вы в группе одни, она удалится.")}</li>
+          <li>{t("Ваши записи в общих тетрадях групп и сообщения в чатах останутся у группы, без вашего имени.")}</li>
         </ul>
         <label className="text-xs text-ink/60 mb-1 block">
-          Чтобы подтвердить, введите свой юзернейм: <span className="font-semibold text-ink">{username}</span>
+          {t("Чтобы подтвердить, введите свой юзернейм:")}{" "}<span className="font-semibold text-ink">{username}</span>
         </label>
         <input
           value={typed}
@@ -270,19 +278,19 @@ function DeleteAccountDialog({ username, onClose }: { username: string; onClose:
           autoComplete="off"
           className="w-full rounded-card border border-line px-3 py-2.5 text-sm mb-3"
         />
-        {!online && <p className="text-xs text-coral mb-3">Для удаления аккаунта нужен интернет.</p>}
+        {!online && <p className="text-xs text-coral mb-3">{t("Для удаления аккаунта нужен интернет.")}</p>}
         {step && <p className="text-xs text-ink/60 mb-3">{STEP_TEXT[step]}</p>}
         {error && <p className="text-xs text-coral mb-3">{error}</p>}
         <div className="flex justify-end gap-2">
           <button onClick={onClose} disabled={busy} className="px-4 py-2 text-sm text-ink/60 hover:text-ink">
-            Отмена
+            {t("Отмена")}
           </button>
           <button
             onClick={handleDelete}
             disabled={!matches || busy || !online}
             className="px-4 py-2 text-sm rounded-card bg-coral text-white font-medium hover:brightness-95 disabled:opacity-40"
           >
-            {busy ? "Удаляем…" : "Удалить аккаунт"}
+            {busy ? t("Удаляем…") : t("Удалить аккаунт")}
           </button>
         </div>
       </div>
